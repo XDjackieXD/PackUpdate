@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:controller="at.chaosfield.packupdate.FxController" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="50.0" minWidth="310.0" prefHeight="50.0" prefWidth="310.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label fx:id="status" text="Pack Updater" />
+      <ProgressBar fx:id="progress" prefWidth="300.0" progress="0.0" />
+   </children>
+</VBox>
