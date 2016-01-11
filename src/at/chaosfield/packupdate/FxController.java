@@ -109,7 +109,8 @@ public class FxController{
                     FileManager.downloadFile(parameters.get(0), parameters.get(2) + File.separator + parameters.get(1));
 
                 }catch(IOException e){
-                    return new String[]{"Error While Updating", "Could not update", "Got IOException while updating!"};
+                    e.printStackTrace();
+                    return new String[]{"Error While Updating", "Could not update", "Got IOException while updating!\nPlease take a look at the log for a stacktrace."};
                 }
                 return null;
             }
