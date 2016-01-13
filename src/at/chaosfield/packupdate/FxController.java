@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Override;
 import java.lang.String;
+import java.net.URL;
 import java.util.*;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +38,16 @@ public class FxController {
         Task updater = new Task<List<String>>() {
             @Override
             protected List<String> call() {
-                List<String> ret = new ArrayList<>();
+
+                class ErrorLog extends ArrayList<String> {
+                    @Override
+                    public boolean add(String e) {
+                        System.out.println(e);
+                        return super.add(e);
+                    }
+                }
+
+                List<String> ret = new ErrorLog();
                 HashMap<String, String[]> updated = new HashMap<>();
                 HashMap<String, String[]> updateables = null;
 
@@ -62,19 +72,20 @@ public class FxController {
                         switch (entry.getValue()[3]) {
                             case "mod":
                                 if (!entry.getValue()[2].equals("")) { //If URL is not empty -> download new Version
-                                    if (!entry.getValue()[1].equals("")) //If old version exists delete it
-                                        if (!FileManager.deleteLocalFile(modsPath + entry.getKey() + "-" + entry.getValue()[1] + ".jar")) {
-                                            ret.add("[" + entry.getKey() + "]" + "Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed");
-                                            continue;
-                                        }
                                     try {
                                         FileManager.downloadFile(entry.getValue()[2], modsPath + entry.getKey() + "-" + entry.getValue()[0] + ".jar");
                                     } catch (IOException e) {
-                                        ret.add("[" + entry.getKey() + "]" + "Download failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Download failed.");
+                                        continue;
                                     }
+                                    if (!entry.getValue()[1].equals("")) //If old version exists delete it
+                                        if (!FileManager.deleteLocalFile(modsPath + entry.getKey() + "-" + entry.getValue()[1] + ".jar")) {
+                                            ret.add("[" + entry.getKey() + "] " + "Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed");
+                                            continue;
+                                        }
                                 } else {
                                     if (!FileManager.deleteLocalFile(modsPath + entry.getKey() + "-" + entry.getValue()[1] + ".jar")) {
-                                        ret.add("[" + entry.getKey() + "]" + "Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed");
+                                        ret.add("[" + entry.getKey() + "] " + "Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed");
                                         continue;
                                     }
                                 }
@@ -83,23 +94,24 @@ public class FxController {
                             case "config":
                                 if (!entry.getValue()[2].equals("")) { //If URL is not empty -> download new Version
                                     if (!FileManager.deleteLocalFolderContents(configPath)) { //delete current config files
-                                        ret.add("[" + entry.getKey() + "]" + "Either deleting the config folder's content or creating an empty config folder failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Either deleting the config folder's content or creating an empty config folder failed.");
                                         continue;
                                     }
 
                                     try {
                                         FileManager.downloadFile(entry.getValue()[2], configPath + File.separator + entry.getKey() + "-" + entry.getValue()[0] + ".zip");
                                     } catch (IOException e) {
-                                        ret.add("[" + entry.getKey() + "]" + "Download failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Download failed.");
+                                        continue;
                                     }
 
                                     if (!FileManager.unzipLocalFile(configPath + File.separator + entry.getKey() + "-" + entry.getValue()[0] + ".zip", configPath + File.separator)) {
-                                        ret.add("[" + entry.getKey() + "]" + "Unpack failed: The zip file seems to be corrupted.");
+                                        ret.add("[" + entry.getKey() + "] " + "Unpack failed: The zip file seems to be corrupted.");
                                         continue;
                                     }
                                 } else {
                                     if (!FileManager.deleteLocalFolderContents(configPath)) {
-                                        ret.add("[" + entry.getKey() + "]" + "Either deleting the config folder's content or creating an empty config folder failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Either deleting the config folder's content or creating an empty config folder failed.");
                                         continue;
                                     }
                                 }
@@ -108,31 +120,32 @@ public class FxController {
                             case "resources":
                                 if (!entry.getValue()[2].equals("")) { //If URL is not empty -> download new Version
                                     if (!FileManager.deleteLocalFolderContents(resourcesPath + File.separator + "resources")) { //delete current config files
-                                        ret.add("[" + entry.getKey() + "]" + "Either deleting the resources folder's content or creating an empty resources folder failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Either deleting the resources folder's content or creating an empty resources folder failed.");
                                         continue;
                                     }
                                     if (!FileManager.deleteLocalFolderContents(resourcesPath + File.separator + "scripts")) {
-                                        ret.add("[" + entry.getKey() + "]" + "Either deleting the scripts folder's content or creating an empty scripts folder failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Either deleting the scripts folder's content or creating an empty scripts folder failed.");
                                         continue;
                                     }
 
                                     try {
                                         FileManager.downloadFile(entry.getValue()[2], resourcesPath + File.separator + "resources" + File.separator + entry.getKey() + "-" + entry.getValue()[0] + ".zip");
                                     } catch (IOException e) {
-                                        ret.add("[" + entry.getKey() + "]" + "Download failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Download failed.");
+                                        continue;
                                     }
 
                                     if (!FileManager.unzipLocalFile(resourcesPath + File.separator + "resources" + File.separator + entry.getKey() + "-" + entry.getValue()[0] + ".zip", resourcesPath + File.separator)) {
-                                        ret.add("[" + entry.getKey() + "]" + "Unpack failed: The zip file seems to be corrupted.");
+                                        ret.add("[" + entry.getKey() + "] " + "Unpack failed: The zip file seems to be corrupted.");
                                         continue;
                                     }
                                 } else {
                                     if (!FileManager.deleteLocalFolderContents(resourcesPath + File.separator + "resources")) {
-                                        ret.add("[" + entry.getKey() + "]" + "Either deleting the resources folder's content or creating an empty resources folder failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Either deleting the resources folder's content or creating an empty resources folder failed.");
                                         continue;
                                     }
                                     if (!FileManager.deleteLocalFolderContents(resourcesPath + File.separator + "scripts")) {
-                                        ret.add("[" + entry.getKey() + "]" + "Either deleting the scripts folder's content or creating an empty scripts folder failed.");
+                                        ret.add("[" + entry.getKey() + "] " + "Either deleting the scripts folder's content or creating an empty scripts folder failed.");
                                         continue;
                                     }
                                 }
@@ -152,19 +165,19 @@ public class FxController {
                 //FileManager.deleteLocalFile(parameters.get(2) + File.separator + parameters.get(1));
                 //FileManager.downloadFile(parameters.get(0), parameters.get(2) + File.separator + parameters.get(1));
 
-                //TODO generate cfg file, save it and return errors if any.
+                if(!FileManager.writeLocalConfig(updated, parameters.get(2) + File.separator + parameters.get(1)))
+                    ret.add("[PackInfo]" + "Error writing " + parameters.get(1));
 
-                return null;
+                return ret;
             }
         };
 
         progress.progressProperty().bind(updater.progressProperty());
         status.textProperty().bind(updater.messageProperty());
         updater.setOnSucceeded(t -> {
-            String[] returnValue = (String[]) updater.getValue();
-            if (returnValue != null) {
-                System.out.println(returnValue[1] + ": " + returnValue[2]);
-                main.errorAlert(returnValue[0], returnValue[1], returnValue[2]);
+            List<String> returnValue = (List<String>) updater.getValue();
+            if (returnValue.size() > 0) {
+                main.errorAlert(returnValue);
             }
             primaryStage.close();
         });

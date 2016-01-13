@@ -4,6 +4,10 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -57,6 +61,34 @@ public class PackUpdate extends Application{
         }catch(IOException e){
             e.printStackTrace();
         }
+    }
+
+    public void errorAlert(List<String> errors){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("PackUpdate Error");
+        alert.setHeaderText("Something went wrong while updating your pack :(");
+
+        Label label = new Label("Log:");
+        String textAreaText = "";
+        for(String error : errors){
+            textAreaText += "\n" + error;
+        }
+        TextArea textArea = new TextArea(textAreaText);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        GridPane expContent = new GridPane();
+        expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.add(label, 0, 0);
+        expContent.add(textArea, 0, 1);
+
+        alert.getDialogPane().setContent(expContent);
+
+        alert.initOwner(this.primaryStage);
+        alert.showAndWait();
     }
 
     public void errorAlert(String title, String header, String message){

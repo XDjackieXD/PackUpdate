@@ -2,8 +2,6 @@ package at.chaosfield.packupdate;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -55,7 +53,11 @@ public class FileManager{
             ZipInputStream zis = new ZipInputStream(new FileInputStream(input));
             ZipEntry ze;
 
+            Boolean hadFiles = false;
+
             while((ze = zis.getNextEntry()) != null){
+                hadFiles = true;
+
                 if(ze.isDirectory())
                     continue;
 
@@ -70,7 +72,7 @@ public class FileManager{
             zis.closeEntry();
             zis.close();
 
-            return true;
+            return hadFiles;
         }catch(Exception e){
             return false;
         }
@@ -91,21 +93,6 @@ public class FileManager{
         return reader;
     }
 
-    //open a local file for writing. Create an empty one if it doesn't exist
-    public static BufferedWriter writeLocalFile(String fileName) throws IOException{
-        File file = new File(fileName);
-        BufferedWriter writer = null;
-        for(int i = 0; i < 3; i++){
-            try{
-                writer = new BufferedWriter(new FileWriter(file));
-            }catch(FileNotFoundException e){
-                file.getParentFile().mkdirs();
-                file.createNewFile();
-            }
-        }
-        return writer;
-    }
-
     //Download a binary file to a given location
     public static void downloadFile(String fileUrl, String destination) throws IOException{
         FileUtils.copyURLToFile(new URL(fileUrl), new File(destination));
@@ -117,10 +104,10 @@ public class FileManager{
     //mod had to be a jar file
     //resource has to be a zip file that gets extracted into the resources folder
     private static HashMap<String, String[]> parsePackinfo(BufferedReader packinfo) throws IOException{
-        HashMap<String, String[]> parsedInfo = new HashMap<String, String[]>();
+        HashMap<String, String[]> parsedInfo = new HashMap<>();
         String tmp;
         while((tmp = packinfo.readLine()) != null){
-            if(!tmp.equals("")){ //Ignore empty lines
+            if(!tmp.equals("") || !tmp.startsWith("#")){ //Ignore empty lines and allow comments with "#"
                 String[] parsed = tmp.split(",");
                 if(parsed.length == 4){
                     parsedInfo.put(parsed[0], new String[]{parsed[1], parsed[2], parsed[3]});
@@ -135,7 +122,7 @@ public class FileManager{
     public static HashMap<String, String[]> getAvailableUpdates(String onlineVersionFile, String localVersionFile) throws IOException{
         HashMap<String, String[]> onlinePackInfo = parsePackinfo(getOnlineFile(onlineVersionFile));
         HashMap<String, String[]> localPackInfo = parsePackinfo(getLocalFile(localVersionFile));
-        HashMap<String, String[]> needsUpdate = new HashMap<String, String[]>(); //Key: Name Value: New Version, Old Version, Download URL, Type
+        HashMap<String, String[]> needsUpdate = new HashMap<>(); //Key: Name Value: New Version, Old Version, Download URL, Type
         if(onlinePackInfo.isEmpty()) return needsUpdate;
         for(Map.Entry<String, String[]> entry : onlinePackInfo.entrySet()){
             if(localPackInfo.containsKey(entry.getKey())){
@@ -154,5 +141,33 @@ public class FileManager{
             needsUpdate.put(entry.getKey(), new String[]{"", entry.getValue()[0], "", entry.getValue()[2]});
         }
         return needsUpdate;
+    }
+
+    public static boolean writeLocalConfig(HashMap<String, String[]> objects, String fileName){
+
+        HashMap<String, String[]> packInfo = new HashMap<>();
+
+        try{
+            packInfo = parsePackinfo(getLocalFile(fileName));
+        }catch(IOException e){
+            System.out.println("[PackInfo] Warning: could not get previous config. Ignore this if it is the first launch of the pack.");
+        }
+
+        for(Map.Entry<String, String[]> entry : objects.entrySet()){
+            packInfo.put(entry.getKey(), new String[]{entry.getValue()[0], entry.getValue()[2], entry.getValue()[3]});
+        }
+
+        try{
+            PrintWriter writer = new PrintWriter(fileName, "UTF-8");
+            for(Map.Entry<String, String[]> entry : packInfo.entrySet()){
+                if(!entry.getValue()[2].equals("") && !entry.getValue()[0].equals(""))
+                    writer.println(entry.getKey() + "," + entry.getValue()[0] + "," + entry.getValue()[1] + "," + entry.getValue()[2]);
+            }
+            writer.close();
+        }catch(Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }
