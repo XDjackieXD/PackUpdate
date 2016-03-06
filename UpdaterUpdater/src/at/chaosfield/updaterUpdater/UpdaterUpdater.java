@@ -5,6 +5,8 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.jar.JarFile;
@@ -19,6 +21,10 @@ public class UpdaterUpdater{
 
 
     public static void main(String[] args){
+        new UpdaterUpdater(args);
+    }
+
+    public UpdaterUpdater(String[] args){
         if(args.length != 4){
             System.out.println("4 Parameters are required (link to online pack config, location of the local pack config inside modpack root, modpack root, location of PackUpdate jar inside modpack root)");
         }
@@ -47,29 +53,14 @@ public class UpdaterUpdater{
         }
 
         try{
-            runPackUpdate(args[2] + File.separator + args[3], "\"" + args[0] + "\" \"" + args[1] + "\" \"" + args[2] + "\"");
-        }catch(IOException e){
+            JarRunner.addFile(new File(args[2] + File.separator + args[3]));
+            Method mainMethod = ClassLoader.getSystemClassLoader().loadClass("at.chaosfield.packupdate.PackUpdate").getDeclaredMethod("main", String[].class);
+            mainMethod.invoke(null, (Object)new String[]{args[0], args[1], args[2]});
+        }catch(IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException e){
             System.out.println("[PackUpdate Updater] Execution of PackUpdater failed");
             e.printStackTrace();
         }
-    }
 
-    public static void runPackUpdate(String path, String args) throws IOException{
-        String command = "\"" + System.getProperty("java.home") + File.separator + "bin" + File.separator + "java\" -jar \"" + path + "\" " + args;
-        String[] runCmd;
-        if(System.getProperty("os.name").toLowerCase().contains("win")){
-            runCmd = new String[]{"cmd", "/c", command};
-        }else{
-            runCmd = new String[]{"/bin/sh", "-c", command};
-        }
-
-        try{
-            Runtime.getRuntime().exec(runCmd).waitFor();
-        }catch(InterruptedException e){
-            e.printStackTrace();
-        }
-
-        System.out.printf("Ran command. Exiting now.");
     }
 
     public static boolean hasUpdate(String version) throws IOException{
