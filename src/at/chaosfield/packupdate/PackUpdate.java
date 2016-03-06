@@ -19,6 +19,9 @@ import java.util.List;
  */
 public class PackUpdate extends Application{
 
+    public static final String version = "2.1";
+    public static final String apiUrl = "https://api.github.com/repos/XDjackieXD/PackUpdate/releases/latest";
+
     protected Stage primaryStage;
     protected VBox rootLayout;
 

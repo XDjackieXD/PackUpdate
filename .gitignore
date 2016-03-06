@@ -15,8 +15,10 @@ hs_err_pid*
 /testModpack
 
 # IntelliJ IDEA
-/*.iml
+*.iml
 /*.ipr
 /*.iws
 /.idea
 /out
+
+/lib

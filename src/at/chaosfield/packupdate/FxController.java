@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Override;
 import java.lang.String;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 import java.util.HashMap;
@@ -51,10 +52,28 @@ public class FxController {
                 HashMap<String, String[]> updated = new HashMap<>();
                 HashMap<String, String[]> updateables = null;
 
+                try{
+                    updateMessage("Checking for Updates");
+                    if(UpdaterUpdater.hasUpdate()){
+                        updateMessage("Updating PackUpdate");
+                        if(UpdaterUpdater.downloadPackUpdate(parameters.get(2)))
+                            if(UpdaterUpdater.downloadUpdater(parameters.get(2)))
+                                UpdaterUpdater.runUpdater(parameters.get(2), "\"" + parameters.get(0) + "\" \"" + parameters.get(1) + "\" \"" + parameters.get(2) + "\" \"PackUpdate.jar\"");
+                            else
+                                ret.add("[PackUpdate Updater] Update failed: UpdateUpdater download corrupted.");
+                        else
+                            ret.add("[PackUpdate Updater] Update failed: PackUpdate download corrupted.");
+                    }
+                }catch(IOException e){
+                    ret.add("[PackUpdate Updater] Update check failed.");
+                    e.printStackTrace();
+                }
+
                 try {
                     updateables = FileManager.getAvailableUpdates(parameters.get(0), parameters.get(2) + File.separator + parameters.get(1));
                     updateMessage("To Update: " + updateables.size());
                 } catch (IOException e) {
+                    ret.add("[PackUpdate] Downloading \"" + parameters.get(0) + "\" failed.");
                     e.printStackTrace();
                 }
 
@@ -80,13 +99,15 @@ public class FxController {
                                     }
                                     if (!entry.getValue()[1].equals("")) //If old version exists delete it
                                         if (!FileManager.deleteLocalFile(modsPath + entry.getKey() + "-" + entry.getValue()[1] + ".jar")) {
-                                            ret.add("[" + entry.getKey() + "] " + "Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed");
-                                            continue;
+                                            ret.add("[" + entry.getKey() + "] " + "Warning: Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed.\n" +
+                                                    "Either someone touched the mod's file manually or this is a bug.");
+                                            //continue;
                                         }
                                 } else {
                                     if (!FileManager.deleteLocalFile(modsPath + entry.getKey() + "-" + entry.getValue()[1] + ".jar")) {
-                                        ret.add("[" + entry.getKey() + "] " + "Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed");
-                                        continue;
+                                        ret.add("[" + entry.getKey() + "] " + "Warning: Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed.\n" +
+                                                "Either someone touched the mod's file manually or this is a bug.");
+                                        //continue;
                                     }
                                 }
                                 break;
@@ -162,8 +183,6 @@ public class FxController {
                         System.out.println("Successfully updated " + entry.getKey());
                     }
                 }
-                //FileManager.deleteLocalFile(parameters.get(2) + File.separator + parameters.get(1));
-                //FileManager.downloadFile(parameters.get(0), parameters.get(2) + File.separator + parameters.get(1));
 
                 if(!FileManager.writeLocalConfig(updated, parameters.get(2) + File.separator + parameters.get(1)))
                     ret.add("[PackInfo]" + "Error writing " + parameters.get(1));
