@@ -10,8 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Override;
 import java.lang.String;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.*;
 import java.util.HashMap;
 import java.util.List;
@@ -51,23 +49,6 @@ public class FxController {
                 List<String> ret = new ErrorLog();
                 HashMap<String, String[]> updated = new HashMap<>();
                 HashMap<String, String[]> updateables = null;
-
-                try{
-                    updateMessage("Checking for Updates");
-                    if(UpdaterUpdater.hasUpdate()){
-                        updateMessage("Updating PackUpdate");
-                        if(UpdaterUpdater.downloadPackUpdate(parameters.get(2)))
-                            if(UpdaterUpdater.downloadUpdater(parameters.get(2)))
-                                UpdaterUpdater.runUpdater(parameters.get(2), "\"" + parameters.get(0) + "\" \"" + parameters.get(1) + "\" \"" + parameters.get(2) + "\" \"PackUpdate.jar\"");
-                            else
-                                ret.add("[PackUpdate Updater] Update failed: UpdateUpdater download corrupted.");
-                        else
-                            ret.add("[PackUpdate Updater] Update failed: PackUpdate download corrupted.");
-                    }
-                }catch(IOException e){
-                    ret.add("[PackUpdate Updater] Update check failed.");
-                    e.printStackTrace();
-                }
 
                 try {
                     updateables = FileManager.getAvailableUpdates(parameters.get(0), parameters.get(2) + File.separator + parameters.get(1));
