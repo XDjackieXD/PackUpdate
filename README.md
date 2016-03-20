@@ -2,10 +2,10 @@
 
 ## WTF?
 A simple program that downloads and updates modpacks automatically.
-It avoids
- * Licensing issues
- * Downloading the whole pack on mod or config changes
-and can easily be integrated into a MultiMC instance using Pre-Launch commands.
+It was written to work directly as a pre-launch command for MultiMC and features
+ * Delta updates (only download mods that changed).
+ * Easy creation of modpacks (just a text file with names, versions and download links)
+ * No need for a huge amount of webspace or traffic!
 
 ## How?
 You can find an example modpack in the folder "ExamplePack".
