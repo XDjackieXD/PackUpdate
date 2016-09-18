@@ -55,6 +55,7 @@ public class PackUpdate extends Application{
 
             Scene scene = new Scene(rootLayout);
             primaryStage.setScene(scene);
+            primaryStage.setResizable(false);
             primaryStage.show();
 
             ((FxController) loader.getController()).setMain(this);

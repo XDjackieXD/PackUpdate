@@ -1,6 +1,7 @@
 package at.chaosfield.packupdate;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,7 +96,53 @@ public class FileManager{
 
     //Download a binary file to a given location
     public static void downloadFile(String fileUrl, String destination) throws IOException{
-        FileUtils.copyURLToFile(new URL(fileUrl), new File(destination));
+        //FileUtils.copyURLToFile(new URL(fileUrl), new File(destination));
+
+        OutputStream outStream = null;
+        HttpURLConnection urlCon = null;
+
+        InputStream inStream = null;
+        try {
+            byte[] buf;
+            int byteRead, byteWritten = 0;
+            outStream = new BufferedOutputStream(new FileOutputStream(destination));
+
+            URL url, base, next;
+            String location;
+
+            while(true){
+                url = new URL(fileUrl);
+                urlCon = (HttpURLConnection) url.openConnection();
+                urlCon.setConnectTimeout(15000);
+                urlCon.setReadTimeout(15000);
+                urlCon.setInstanceFollowRedirects(false);
+
+                switch(urlCon.getResponseCode()){
+                    case HttpURLConnection.HTTP_MOVED_PERM:
+                    case HttpURLConnection.HTTP_MOVED_TEMP:
+                    case 307:
+                        location = urlCon.getHeaderField("Location");
+                        base = new URL(fileUrl);
+                        next = new URL(base, location);
+                        fileUrl = next.toExternalForm();
+                        continue;
+                }
+
+                break;
+            }
+
+            inStream = urlCon.getInputStream();
+            buf = new byte[1024];
+            while ((byteRead = inStream.read(buf)) != -1) {
+                outStream.write(buf, 0, byteRead);
+                byteWritten += byteRead;
+            }
+        }finally {
+            if(inStream != null)
+                inStream.close();
+            if(outStream != null)
+                outStream.close();
+        }
     }
 
     //Parse a PackInfo CSV file "name,version,download url,type"
