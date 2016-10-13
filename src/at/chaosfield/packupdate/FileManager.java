@@ -154,7 +154,7 @@ public class FileManager{
         HashMap<String, String[]> parsedInfo = new HashMap<>();
         String tmp;
         while((tmp = packinfo.readLine()) != null){
-            if(!tmp.equals("") || !tmp.startsWith("#")){ //Ignore empty lines and allow comments with "#"
+            if(!(tmp.equals("") || tmp.startsWith("#"))){ //Ignore empty lines and allow comments with "#"
                 String[] parsed = tmp.split(",");
                 if(parsed.length == 4){
                     parsedInfo.put(parsed[0], new String[]{parsed[1], parsed[2], parsed[3]});
