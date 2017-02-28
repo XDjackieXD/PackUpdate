@@ -96,7 +96,7 @@ public class FxController {
                             case "resourcepack":
                                 if (!entry.getValue()[2].equals("")) { //If URL is not empty -> download new Version
                                     try {
-                                        FileManager.downloadFile(entry.getValue()[2], resourcePacksPath + entry.getKey() + "-" + entry.getValue()[0] + ".jar");
+                                        FileManager.downloadFile(entry.getValue()[2], resourcePacksPath + entry.getKey() + "-" + entry.getValue()[0] + ".zip");
                                     } catch (IOException e) {
                                         ret.add("[" + entry.getKey() + "] " + "Download failed.");
                                         continue;
