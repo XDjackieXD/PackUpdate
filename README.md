@@ -1,5 +1,7 @@
 # PackUpdate
 
+Disclaimer: As I don't use it anymore myself, I won't actively maintain this or add features apart from small fixes. Feel free to send pull reqests though (and don't hesitate to poke me again should I forget to merge it).
+
 ## WTF?
 A simple program that downloads and updates modpacks automatically.
 It was written to work directly as a pre-launch command for MultiMC and features
