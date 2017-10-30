@@ -64,6 +64,7 @@ public class FxController {
 
                     final String modsPath = parameters.get(2) + File.separator + "mods" + File.separator;
                     final String configPath = parameters.get(2) + File.separator + "config";
+                    final String resourcePacksPath = parameters.get(2) + File.separator + "resources" + File.separator;
                     final String resourcesPath = parameters.get(2);
 
                     for (Map.Entry<String, String[]> entry : updateables.entrySet()) {
@@ -88,6 +89,28 @@ public class FxController {
                                     if (!FileManager.deleteLocalFile(modsPath + entry.getKey() + "-" + entry.getValue()[1] + ".jar")) {
                                         ret.add("[" + entry.getKey() + "] " + "Warning: Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".jar failed.\n" +
                                                 "Either someone touched the mod's file manually or this is a bug.");
+                                        //continue;
+                                    }
+                                }
+                                break;
+                            case "resourcepack":
+                                if (!entry.getValue()[2].equals("")) { //If URL is not empty -> download new Version
+                                    try {
+                                        FileManager.downloadFile(entry.getValue()[2], resourcePacksPath + entry.getKey() + "-" + entry.getValue()[0] + ".zip");
+                                    } catch (IOException e) {
+                                        ret.add("[" + entry.getKey() + "] " + "Download failed.");
+                                        continue;
+                                    }
+                                    if (!entry.getValue()[1].equals("")) //If old version exists delete it
+                                        if (!FileManager.deleteLocalFile(resourcePacksPath + entry.getKey() + "-" + entry.getValue()[1] + ".zip")) {
+                                            ret.add("[" + entry.getKey() + "] " + "Warning: Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".zip failed.\n" +
+                                                    "Either someone touched the resource pack's file manually or this is a bug.");
+                                            //continue;
+                                        }
+                                } else {
+                                    if (!FileManager.deleteLocalFile(resourcePacksPath + entry.getKey() + "-" + entry.getValue()[1] + ".zip")) {
+                                        ret.add("[" + entry.getKey() + "] " + "Warning: Deletion of file " + entry.getKey() + "-" + entry.getValue()[1] + ".zip failed.\n" +
+                                                "Either someone touched the resource pack's file manually or this is a bug.");
                                         //continue;
                                     }
                                 }
