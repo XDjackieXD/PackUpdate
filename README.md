@@ -9,9 +9,11 @@ It was written to work directly as a pre-launch command for MultiMC and features
 
 ## How?
 You can find an example modpack in the folder "ExamplePack".
-Basically the config file on your server is a csv with the following values:
+Basically add the Updater.jar into the instance zip in the minecraft folder
+and add this line to the instance.cfg file
+`PreLaunchCommand=java -jar "$INST_MC_DIR/Updater.jar" "Link to modpack.cfg file" "PackInfo.cfg" "$INST_MC_DIR" "PackUpdate.jar"`
+The config file on your server is a csv with the following values:
 Name,Version,Download-URL,Type
 Where Type is either "mod", "config" or "resources":
 "config" and "resources" are both zip files.
-the "config" zip gets extracted into the config folder of your Minecraft instance
-and the "resources" zip gets extraced into the root folder of your Minecraft instance.
+and get extracted into the root folder of your Minecraft instance.
