@@ -31,6 +31,15 @@ public class UpdaterUpdater{
 
         String version = null;
 
+        try {
+            String directoryName = args[2].concat(this.getClassName());
+
+            File directory = new File(directoryName);
+            if (! directory.exists()){
+                directory.mkdir();
+            }
+        }
+
         try{
             JarFile packUpdateJar = new JarFile(args[2] + File.separator + args[3]);
             ZipEntry packUpdateEntry = packUpdateJar.getEntry("version.txt");
