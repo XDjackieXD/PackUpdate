@@ -100,6 +100,7 @@ public class FileManager{
 
         OutputStream outStream = null;
         HttpURLConnection urlCon = null;
+        String userAgent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36";
 
         InputStream inStream = null;
         try {
@@ -113,6 +114,7 @@ public class FileManager{
             while(true){
                 url = new URL(fileUrl);
                 urlCon = (HttpURLConnection) url.openConnection();
+                urlCon.setRequestProperty("User-Agent", userAgent);
                 urlCon.setConnectTimeout(15000);
                 urlCon.setReadTimeout(15000);
                 urlCon.setInstanceFollowRedirects(false);
