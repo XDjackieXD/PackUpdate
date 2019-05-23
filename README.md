@@ -22,3 +22,7 @@ and get extracted into the root folder of your Minecraft instance.
 Checksum is optional and if present a sha256 sum of the file.
 Flags is a semicolon(`;`) separated list of flags.
 Currently supported are `server_only`, `client_only` and `force_overwrite`
+
+## How to build?
+Install [Scala](https://scala-lang.org/) and [SBT](https://www.scala-sbt.org/), then run `sbt assembly`. This will produce a standalone jar. 
+For development you can use IntelliJ Idea with the scala plugin, which has native support for sbt
