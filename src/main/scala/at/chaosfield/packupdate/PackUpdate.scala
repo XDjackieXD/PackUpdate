@@ -31,9 +31,9 @@ class PackUpdate extends Application {
   override def start(primaryStage: Stage): Unit = {
     this.primaryStage = primaryStage
     this.primaryStage.setTitle("Updating")
-    this.primaryStage.setScene(new Scene(new Group, 300, 300, Color.BLACK))
     parameters = this.getParameters.getRaw
     if (parameters.size != 3) {
+      this.primaryStage.setScene(new Scene(new Group, 300, 300, Color.BLACK))
       errorAlert("Wrong Parameters", "Pack Updater was provided with the wrong Parameters", "If you did not modify any instance settings\nplease contact the modpack author!")
       primaryStage.close()
       return
@@ -90,6 +90,10 @@ class PackUpdate extends Application {
     alert.setContentText(message)
     alert.initOwner(this.primaryStage)
     alert.showAndWait
+  }
+
+  def close(): Unit = {
+    primaryStage.close()
   }
 
   def main(args: Array[String]): Unit = {

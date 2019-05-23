@@ -1,10 +1,11 @@
 package at.chaosfield.packupdate
 
 import java.io.{BufferedReader, File, FileInputStream, FileNotFoundException, FileOutputStream, FileReader, IOException, InputStream, InputStreamReader, OutputStream, PrintStream}
-import java.net.{HttpURLConnection, URL}
+import java.net.{HttpURLConnection, URL, URLConnection}
 
 import org.apache.commons.io.FileUtils
 
+import scala.annotation.tailrec
 import scala.util.control.Breaks._
 import scala.io.Source
 
@@ -36,14 +37,18 @@ object FileManager {
     * @param remote The currently installed set of remote components
     * @return A set of updates, this can then be applied as needed
     */
-  def getUpdates(local: List[Component], remote: List[Component]): List[Update] = {
+  def getUpdates(local: List[Component], remote: List[Component], config: MainConfig): List[Update] = {
     (
       local.flatMap(component => {
         remote.find(c => c.name == component.name) match {
           case Some(remote_version) => if (remote_version.version != component.version) {
             Some(Update.UpdatedComponent(component, remote_version))
           } else {
-            None
+            if (remote_version.verifyChecksum(config)) {
+              None
+            } else {
+              Some(Update.InvalidComponent(remote_version))
+            }
           }
           case None => Some(Update.RemovedComponent(component))
         }
@@ -58,7 +63,9 @@ object FileManager {
 
   def retrieveUrl(url: URL): InputStream = {
     println(s"Downloading $url")
-    def request(url: URL) = {
+    @tailrec
+    def request(url: URL): URLConnection = {
+      println(s" -> Trying $url")
       val con = url.openConnection
       con.setRequestProperty("user-Agent", UserAgent)
       con.setConnectTimeout(5000)
@@ -66,11 +73,15 @@ object FileManager {
       con match {
         case http: HttpURLConnection => {
           http.setInstanceFollowRedirects(false)
-
+          http.getResponseCode match {
+            case HttpURLConnection.HTTP_MOVED_PERM | HttpURLConnection.HTTP_MOVED_TEMP | 307 =>
+              request(new URL(http.getHeaderField("Location")))
+            case _ =>
+              http
+          }
         }
-        case _ => Unit
+        case _ => con
       }
-      con
     }
     request(url).getInputStream
   }
@@ -78,13 +89,14 @@ object FileManager {
   def writeStreamToFile(source: InputStream, file: File): Unit = {
     val buf = new Array[Byte](1024)
     val dest = new FileOutputStream(file)
-    while (true) {
+    var finished = false
+    while (!finished) {
       val bytesRead = source.read(buf)
       if (bytesRead == -1) {
-        break
+        finished = true
+      } else {
+        dest.write(buf, 0, bytesRead)
       }
-      println(s"Foo: $bytesRead")
-      dest.write(buf, 0, bytesRead)
     }
   }
 

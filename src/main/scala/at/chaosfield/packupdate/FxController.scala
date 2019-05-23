@@ -82,6 +82,10 @@ class FxController {
           override def reportError(message: String, exception: Option[Exception]): Unit = {
             log += message
             println(message)
+            exception match {
+              case Some(e) => e.printStackTrace()
+              case _ =>
+            }
           }
         }
 
@@ -89,7 +93,7 @@ class FxController {
         val local = new File(parameters.get(1))
         val minecraftDir = new File(parameters.get(2))
 
-        new MainLogic(GuiFeedback).runUpdate(remote, local, new MainConfig(minecraftDir))
+        new MainLogic(GuiFeedback).runUpdate(remote, local, new MainConfig(minecraftDir, PackSide.Client))
         log.toList
       }
     }
@@ -101,7 +105,7 @@ class FxController {
         if (returnValue.nonEmpty) {
           main.errorAlert(returnValue)
         }
-        main.stop()
+        main.close()
     })
     new Thread(updater).start()
   }

@@ -18,10 +18,18 @@ object Update {
     override def execute(minecraftDir: File): Unit = {
       component.componentType match {
         case ComponentType.Mod =>
-          val fileName = s"${component.name} - ${component.version}"
-          val file = new File(minecraftDir, "mods/" + fileName)
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), file)
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), Util.fileForComponent(component, minecraftDir))
+          println("Component Updated")
       }
+    }
+  }
+  case class InvalidComponent(component: Component) extends Update {
+    override def oldVersion: Option[Component] = Some(component)
+
+    override def newVersion: Option[Component] = Some(component)
+
+    override def execute(minecraftDir: File): Unit = {
+      UpdatedComponent(component, component).execute(minecraftDir)
     }
   }
   case class UpdatedComponent(oldComponent: Component, newComponent: Component) extends Update {
@@ -42,9 +50,7 @@ object Update {
     override def execute(minecraftDir: File): Unit = {
       component.componentType match {
         case ComponentType.Mod =>
-          val fileName = s"${component.name} - ${component.version}"
-          val file = new File(minecraftDir, fileName)
-          file.delete()
+          Util.fileForComponent(component, minecraftDir).delete()
       }
     }
   }

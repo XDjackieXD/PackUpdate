@@ -10,9 +10,12 @@ class MainLogic(ui: UiCallbacks) {
     try {
       val localData = getLocalData(localFile)
       ui.statusUpdate("Updating Pack Metadata...")
-      val remoteData = FileManager.parsePackList(Source.fromInputStream(FileManager.retrieveUrl(remoteUrl)))
+      val remoteData = FileManager
+        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(remoteUrl)))
+        .filter(c => c.neededOnSide(config.packSide))
 
-      val updates = FileManager.getUpdates(localData, remoteData)
+      ui.statusUpdate("Calculating changes and checking integrity...")
+      val updates = FileManager.getUpdates(localData, remoteData, config)
 
       new File(config.minecraftDir, "mods").mkdirs()
 
@@ -21,6 +24,7 @@ class MainLogic(ui: UiCallbacks) {
           case Update.NewComponent(_) => "Installing"
           case Update.RemovedComponent(_) => "Removing"
           case Update.UpdatedComponent(_, _) => "Updating"
+          case Update.InvalidComponent(_) => "Repairing"
         }
         ui.statusUpdate(s"$verb ${update.name}")
         ui.progressUpdate(idx, updates.length)
@@ -29,8 +33,7 @@ class MainLogic(ui: UiCallbacks) {
         } catch {
           // TODO: Mark mod as failed
           case e: Exception =>
-            ui.reportError(s"Could not download ${update.name}", Some(e))
-            e.printStackTrace()
+            ui.reportError(s"Could not download ${update.name}: ${Util.exceptionToHumanReadable(e)}", Some(e))
         }
       }
       ui.hideProgress()
