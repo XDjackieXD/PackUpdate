@@ -1,10 +1,16 @@
 package at.chaosfield.packupdate;
 
 public enum ComponentType {
-    Mod,
-    Resource,
-    Config,
-    Unknown;
+    Mod("mod"),
+    Resource("resource"),
+    Config("config"),
+    Unknown("");
+
+    public String stringValue;
+
+    ComponentType(String type) {
+        stringValue = type;
+    }
 
     public static ComponentType parse(String input) {
         switch (input) {

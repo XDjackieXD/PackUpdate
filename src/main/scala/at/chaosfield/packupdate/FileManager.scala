@@ -1,17 +1,15 @@
 package at.chaosfield.packupdate
 
-import java.io.{BufferedReader, File, FileInputStream, FileNotFoundException, FileOutputStream, FileReader, IOException, InputStreamReader}
+import java.io.{BufferedReader, File, FileInputStream, FileNotFoundException, FileOutputStream, FileReader, IOException, InputStream, InputStreamReader, OutputStream, PrintStream}
 import java.net.URL
-import java.util.zip.{ZipEntry, ZipInputStream}
 
 import org.apache.commons.io.FileUtils
 
-import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Breaks._
 import scala.io.Source
 
 object FileManager {
-
-  val UserAgent = "PackUpdate Automated Mod Updater"
+  final val UserAgent = "PackUpdate Automated Mod Updater"
 
   //open an online file for reading.
   def getOnlineFile(fileUrl: String) = new BufferedReader(new InputStreamReader(new URL(fileUrl).openStream))
@@ -40,10 +38,14 @@ object FileManager {
     */
   def getUpdates(local: List[Component], remote: List[Component]): List[Update] = {
     (
-      local.map(component => {
+      local.flatMap(component => {
         remote.find(c => c.name == component.name) match {
-          case Some(remote_version) => Update.UpdatedComponent(component, remote_version)
-          case None => Update.RemovedComponent(component)
+          case Some(remote_version) => if (remote_version.version != component.version) {
+            Some(Update.UpdatedComponent(component, remote_version))
+          } else {
+            None
+          }
+          case None => Some(Update.RemovedComponent(component))
         }
       })
       ++
@@ -52,13 +54,30 @@ object FileManager {
   }
 
   def parsePackList(packList: Source): List[Component] =
-    packList.getLines().map(s => Component.fromCSV(s.split(","))).toList
+    packList.getLines().filter(l => l.length() > 0 && !l.startsWith("#")).map(s => Component.fromCSV(s.split(","))).toList
 
-  def retrieveUrl(url: URL): Source = {
+  def retrieveUrl(url: URL): InputStream = {
     val con = url.openConnection
     con.setRequestProperty("user-Agent", UserAgent)
     con.setConnectTimeout(5000)
     con.setReadTimeout(5000)
-    Source.fromInputStream(con.getInputStream)
+    con.getInputStream
+  }
+
+  def writeStreamToFile(source: InputStream, file: File): Unit = {
+    val buf = new Array[Byte](1024)
+    val dest = new FileOutputStream(file)
+    while (true) {
+      val bytesRead = source.read(buf)
+      if (bytesRead == 0) {
+        break
+      }
+      dest.write(buf, 0, bytesRead)
+    }
+  }
+
+  def writeMetadata(data: List[Component], localFile: File) = {
+    val s = new PrintStream(new FileOutputStream(localFile))
+    s.println(data.map(_.toCSV).mkString("\n"))
   }
 }

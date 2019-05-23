@@ -1,11 +1,20 @@
 package at.chaosfield.packupdate
 
+import com.sun.xml.internal.ws.api.message.Message
+
 import scala.concurrent.Channel
 
 /**
   * These callbacks will be called in the background thread. Please ensure to not block longer than possible
   */
 trait UiCallbacks {
+  /**
+    *
+    * @param message the message to display
+    * @param exception if this is associated with an exception, this exception
+    */
+  def reportError(message: String, exception: Option[Exception]): Unit
+
   /**
     * Show a progress indicator to the user
     */
