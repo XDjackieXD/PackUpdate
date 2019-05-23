@@ -2,7 +2,7 @@ package at.chaosfield.packupdate;
 
 public enum ComponentType {
     Mod("mod"),
-    Resource("resource"),
+    Resource("resources"),
     Config("config"),
     Unknown("");
 
@@ -16,7 +16,7 @@ public enum ComponentType {
         switch (input) {
             case "mod":
                 return Mod;
-            case "resource":
+            case "resources":
                 return Resource;
             case "config":
                 return Config;

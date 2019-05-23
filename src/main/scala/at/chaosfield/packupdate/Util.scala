@@ -2,6 +2,7 @@ package at.chaosfield.packupdate
 
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{SocketTimeoutException, UnknownHostException}
+import java.nio.file.Files
 
 object Util {
   def fileForComponent(component: Component, minecraftDir: File): File = {
@@ -15,5 +16,13 @@ object Util {
     case e: SocketTimeoutException => e.getMessage
     case e: IOException => e.getMessage
     case e: Exception => s"${e.getClass.getName}: ${e.getMessage}"
+  }
+
+  def createTempDir() = {
+    val dir = new File(Files.createTempDirectory("packupdate").toUri)
+
+    Runtime.getRuntime.addShutdownHook(new Thread() {
+      override def run(): Unit = dir.delete()
+    })
   }
 }

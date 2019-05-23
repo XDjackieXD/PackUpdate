@@ -2,6 +2,7 @@ package at.chaosfield.packupdate
 
 import java.io.{BufferedReader, File, FileInputStream, FileNotFoundException, FileOutputStream, FileReader, IOException, InputStream, InputStreamReader, OutputStream, PrintStream}
 import java.net.{HttpURLConnection, URL, URLConnection}
+import java.util.zip.ZipInputStream
 
 import org.apache.commons.io.FileUtils
 
@@ -28,8 +29,6 @@ object FileManager {
   } catch {
     case _: IOException => false
   }
-
-  def unzipLocalFile(zipFile: String, outputPath: String): Boolean = ???
 
   /**
     * Calculates the diff between two sets of installed components
@@ -103,5 +102,36 @@ object FileManager {
   def writeMetadata(data: List[Component], localFile: File) = {
     val s = new PrintStream(new FileOutputStream(localFile))
     s.println(data.map(_.toCSV).mkString("\n"))
+  }
+
+  /**
+    * Extract a zip file to a given directory
+    * @param zipFile the zip to extract
+    * @param dest the directory to extract to
+    * @return A map with the key being the file names and the value being the sha256 sum
+    */
+  def extractZip(zipFile: File, dest: File): Map[String, String] = {
+    dest.mkdirs()
+    val zipStream = new ZipInputStream(new FileInputStream(zipFile))
+
+    var entry = zipStream.getNextEntry
+    while (entry != null) {
+
+      val name = entry.getName
+      if (!(name.contains("../") || name.startsWith("/"))) {
+        val file = new File(dest, name)
+        if (entry.isDirectory) {
+          file.mkdir()
+        } else {
+          println(s"Extract $file")
+          FileManager.writeStreamToFile(zipStream, file)
+        }
+      } else {
+        println("Warning: Attempt for directory traversal blocked")
+      }
+
+      entry = zipStream.getNextEntry
+    }
+    Map.empty[String, String]
   }
 }

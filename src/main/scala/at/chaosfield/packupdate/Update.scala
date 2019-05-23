@@ -19,7 +19,16 @@ object Update {
       component.componentType match {
         case ComponentType.Mod =>
           FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), Util.fileForComponent(component, minecraftDir))
-          println("Component Updated")
+        case ComponentType.Config =>
+          val file = File.createTempFile("packupdate", component.name + component.version)
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), file)
+          FileManager.extractZip(file, new File(minecraftDir, "config"))
+          file.deleteOnExit()
+        case ComponentType.Resource =>
+          val file = File.createTempFile("packupdate", component.name + component.version)
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), file)
+          FileManager.extractZip(file, new File(minecraftDir, "resources"))
+          file.deleteOnExit()
       }
     }
   }
@@ -51,6 +60,8 @@ object Update {
       component.componentType match {
         case ComponentType.Mod =>
           Util.fileForComponent(component, minecraftDir).delete()
+        case ComponentType.Config | ComponentType.Resource =>
+          println("Warning: Uninstallation of Config or Resource files not supported")
       }
     }
   }
