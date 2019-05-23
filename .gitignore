@@ -20,5 +20,7 @@ hs_err_pid*
 /*.iws
 /.idea
 /out
+target/
+/project/
 
 /lib

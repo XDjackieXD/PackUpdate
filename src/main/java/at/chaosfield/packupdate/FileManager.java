@@ -3,6 +3,7 @@ package at.chaosfield.packupdate;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -100,7 +101,7 @@ public class FileManager{
 
         OutputStream outStream = null;
         HttpURLConnection urlCon = null;
-        String userAgent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36";
+        String userAgent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36";
 
         InputStream inStream = null;
         try {
@@ -111,7 +112,7 @@ public class FileManager{
             URL url, base, next;
             String location;
 
-            while(true){
+            while(true) {
                 url = new URL(fileUrl);
                 urlCon = (HttpURLConnection) url.openConnection();
                 urlCon.setRequestProperty("User-Agent", userAgent);
@@ -139,7 +140,7 @@ public class FileManager{
                 outStream.write(buf, 0, byteRead);
                 byteWritten += byteRead;
             }
-        }finally {
+        } finally {
             if(inStream != null)
                 inStream.close();
             if(outStream != null)
@@ -147,19 +148,20 @@ public class FileManager{
         }
     }
 
-    //Parse a PackInfo CSV file "name,version,download url,type"
+    //Parse a PackInfo CSV file "name,version,download url,type,hash,flags"
     //type is either "resource", "mod" or "config".
     //config has to be a zip file that gets extracted into the config folder after deleting the original content
     //mod had to be a jar file
     //resource has to be a zip file that gets extracted into the resources folder
-    private static HashMap<String, String[]> parsePackinfo(BufferedReader packinfo) throws IOException{
-        HashMap<String, String[]> parsedInfo = new HashMap<>();
+    private static HashMap<String, Component> parsePackinfo(BufferedReader packinfo) throws IOException{
+        HashMap<String, Component> parsedInfo = new HashMap<>();
         String tmp;
         while((tmp = packinfo.readLine()) != null){
             if(!(tmp.equals("") || tmp.startsWith("#"))){ //Ignore empty lines and allow comments with "#"
                 String[] parsed = tmp.split(",");
-                if(parsed.length == 4){
-                    parsedInfo.put(parsed[0], new String[]{parsed[1], parsed[2], parsed[3]});
+                if(parsed.length >= 4 && parsed.length <= 6){
+                    //parsedInfo.put(parsed[0], (String[]) Arrays.stream(parsed).skip(1).toArray());
+                    parsedInfo.put(parsed[0], Component.fromCSV(parsed));
                 }
             }
         }
@@ -169,8 +171,8 @@ public class FileManager{
     //Get all mods that need to be updated
     //If returned URL is empty, the entry has to be deleted & if the local version is empty there was no previous version installed.
     public static HashMap<String, String[]> getAvailableUpdates(String onlineVersionFile, String localVersionFile) throws IOException{
-        HashMap<String, String[]> onlinePackInfo = parsePackinfo(getOnlineFile(onlineVersionFile));
-        HashMap<String, String[]> localPackInfo = parsePackinfo(getLocalFile(localVersionFile));
+        HashMap<String, Component> onlinePackInfo = parsePackinfo(getOnlineFile(onlineVersionFile));
+        HashMap<String, Component> localPackInfo = parsePackinfo(getLocalFile(localVersionFile));
         HashMap<String, String[]> needsUpdate = new HashMap<>(); //Key: Name Value: New Version, Old Version, Download URL, Type
         if(onlinePackInfo.isEmpty()) return needsUpdate;
         for(Map.Entry<String, String[]> entry : onlinePackInfo.entrySet()){
