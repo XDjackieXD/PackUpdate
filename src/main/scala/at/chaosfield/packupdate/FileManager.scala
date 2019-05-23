@@ -1,7 +1,7 @@
 package at.chaosfield.packupdate
 
 import java.io.{BufferedReader, File, FileInputStream, FileNotFoundException, FileOutputStream, FileReader, IOException, InputStream, InputStreamReader, OutputStream, PrintStream}
-import java.net.URL
+import java.net.{HttpURLConnection, URL}
 
 import org.apache.commons.io.FileUtils
 
@@ -57,11 +57,22 @@ object FileManager {
     packList.getLines().filter(l => l.length() > 0 && !l.startsWith("#")).map(s => Component.fromCSV(s.split(","))).toList
 
   def retrieveUrl(url: URL): InputStream = {
-    val con = url.openConnection
-    con.setRequestProperty("user-Agent", UserAgent)
-    con.setConnectTimeout(5000)
-    con.setReadTimeout(5000)
-    con.getInputStream
+    println(s"Downloading $url")
+    def request(url: URL) = {
+      val con = url.openConnection
+      con.setRequestProperty("user-Agent", UserAgent)
+      con.setConnectTimeout(5000)
+      con.setReadTimeout(5000)
+      con match {
+        case http: HttpURLConnection => {
+          http.setInstanceFollowRedirects(false)
+
+        }
+        case _ => Unit
+      }
+      con
+    }
+    request(url).getInputStream
   }
 
   def writeStreamToFile(source: InputStream, file: File): Unit = {
@@ -69,9 +80,10 @@ object FileManager {
     val dest = new FileOutputStream(file)
     while (true) {
       val bytesRead = source.read(buf)
-      if (bytesRead == 0) {
+      if (bytesRead == -1) {
         break
       }
+      println(s"Foo: $bytesRead")
       dest.write(buf, 0, bytesRead)
     }
   }
