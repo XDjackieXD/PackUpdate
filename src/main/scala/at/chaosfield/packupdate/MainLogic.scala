@@ -19,6 +19,7 @@ class MainLogic(ui: UiCallbacks) {
 
       new File(config.minecraftDir, "mods").mkdirs()
 
+      ui.showProgress()
       updates.zipWithIndex.foreach { case (update, idx) =>
         val verb = update match {
           case Update.NewComponent(_) => "Installing"

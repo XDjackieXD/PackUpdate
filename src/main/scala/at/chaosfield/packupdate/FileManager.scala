@@ -61,10 +61,10 @@ object FileManager {
     packList.getLines().filter(l => l.length() > 0 && !l.startsWith("#")).map(s => Component.fromCSV(s.split(","))).toList
 
   def retrieveUrl(url: URL): InputStream = {
-    println(s"Downloading $url")
+    //println(s"Downloading $url")
     @tailrec
     def request(url: URL): URLConnection = {
-      println(s" -> Trying $url")
+      //println(s" -> Trying $url")
       val con = url.openConnection
       con.setRequestProperty("user-Agent", UserAgent)
       con.setConnectTimeout(5000)
@@ -123,11 +123,11 @@ object FileManager {
         if (entry.isDirectory) {
           file.mkdir()
         } else {
-          println(s"Extract $file")
+          //println(s"Extract $file")
           FileManager.writeStreamToFile(zipStream, file)
         }
       } else {
-        println("Warning: Attempt for directory traversal blocked")
+        //println("Warning: Attempt for directory traversal blocked")
       }
 
       entry = zipStream.getNextEntry

@@ -26,10 +26,10 @@ class Component(val name: String, val version: String, val downloadUrl: URL, val
           hash match {
             case Some(h) =>
               val d = DigestUtils.sha256Hex(new FileInputStream(file))
-              println(s"Hash of $name: $d <=> $h")
+              //println(s"Hash of $name: $d <=> $h")
               d == h
             case _ =>
-              println(s"Could not validate integrity of Component $name, because no hash was provided")
+              println(s"Warning: Could not validate integrity of Component $name, because no hash was provided")
               true
           }
         } else {
