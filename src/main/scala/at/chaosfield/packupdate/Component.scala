@@ -6,7 +6,7 @@ import java.security.MessageDigest
 
 import org.apache.commons.codec.digest.DigestUtils
 
-class Component(val name: String, val version: String, val downloadUrl: URL, val componentType: ComponentType, val hash: Option[String], val flags: Array[ComponentFlag]) {
+class Component(val name: String, val version: String, val downloadUrl: Option[URL], val componentType: ComponentType, val hash: Option[String], val flags: Array[ComponentFlag]) {
   def toCSV = {
     Array(
       name,
@@ -55,8 +55,8 @@ object Component {
     new Component(
       data(0), // name
       data(1), // version
-      new URL(data(2)), // downloadUrl
-      ComponentType.parse(data(3)), // componentType
+      if (data(2).isEmpty) None else Some(new URL(data(2))), // downloadUrl
+      ComponentType.fromString(data(3)).getOrElse(ComponentType.Unknown), // componentType
       data.lift(4).filter(_ != ""), // hash
       data.lift(5).map(_.split(';')).getOrElse(Array.empty[String]).flatMap(ComponentFlag.fromString) // flags
     )

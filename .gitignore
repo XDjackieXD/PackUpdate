@@ -21,6 +21,6 @@ hs_err_pid*
 /.idea
 /out
 target/
-/project/
+project/
 
 /lib

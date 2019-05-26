@@ -1,10 +1,17 @@
 package at.chaosfield.packupdate;
 
+import scala.Option;
+import scala.Some;
+
 public enum ComponentType {
     Mod("mod"),
     Resource("resources"),
     Config("config"),
-    Unknown("");
+    Minecraft("minecraft"),
+    Forge("forge"),
+    Unknown("")
+
+    ;
 
     public String stringValue;
 
@@ -12,16 +19,12 @@ public enum ComponentType {
         stringValue = type;
     }
 
-    public static ComponentType parse(String input) {
-        switch (input) {
-            case "mod":
-                return Mod;
-            case "resources":
-                return Resource;
-            case "config":
-                return Config;
-            default:
-                return Unknown;
+    public static Option<ComponentType> fromString(String data) {
+        for (ComponentType type : ComponentType.values()) {
+            if (type.stringValue.equals(data)) {
+                return new Some<>(type);
+            }
         }
+        return Option.empty();
     }
 }

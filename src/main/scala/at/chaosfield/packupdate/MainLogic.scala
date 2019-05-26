@@ -30,7 +30,7 @@ class MainLogic(ui: UiCallbacks) {
         ui.statusUpdate(s"$verb ${update.name}")
         ui.progressUpdate(idx, updates.length)
         try {
-          update.execute(config.minecraftDir)
+          update.execute(config)
         } catch {
           // TODO: Mark mod as failed
           case e: Exception =>
@@ -43,6 +43,7 @@ class MainLogic(ui: UiCallbacks) {
       ui.statusUpdate("Finished")
     } catch {
       case e: Exception =>
+        e.printStackTrace()
         ui.reportError("Internal Error while trying to perform Update", Some(e))
     }
   }

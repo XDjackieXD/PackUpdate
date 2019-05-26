@@ -20,6 +20,12 @@ object ServerMain {
       * @param exception if this is associated with an exception, this exception
       */
     override def reportError(message: String, exception: Option[Exception]): Unit = {
+      exception match {
+        case Some(e) =>
+          if (Util.isExceptionCritical(e))
+            e.printStackTrace()
+        case None =>
+      }
       println(message)
       redraw()
     }

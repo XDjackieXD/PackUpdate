@@ -1,12 +1,13 @@
 package at.chaosfield.packupdate
 
 import java.io.File
+import java.net.URL
 
 sealed abstract class Update {
   def oldVersion: Option[Component]
   def newVersion: Option[Component]
   def name = oldVersion.orElse(newVersion).get.name
-  def execute(minecraftDir: File)
+  def execute(config: MainConfig)
 }
 
 object Update {
@@ -15,20 +16,28 @@ object Update {
 
     override def newVersion: Option[Component] = Some(component)
 
-    override def execute(minecraftDir: File): Unit = {
+    override def execute(config: MainConfig): Unit = {
       component.componentType match {
         case ComponentType.Mod =>
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), Util.fileForComponent(component, minecraftDir))
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get), Util.fileForComponent(component, config.minecraftDir))
         case ComponentType.Config =>
           val file = File.createTempFile("packupdate", component.name + component.version)
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), file)
-          FileManager.extractZip(file, new File(minecraftDir, "config"))
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get), file)
+          FileManager.extractZip(file, new File(config.minecraftDir, "config"))
           file.deleteOnExit()
         case ComponentType.Resource =>
           val file = File.createTempFile("packupdate", component.name + component.version)
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl), file)
-          FileManager.extractZip(file, minecraftDir)
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get), file)
+          FileManager.extractZip(file, config.minecraftDir)
           file.deleteOnExit()
+        case ComponentType.Forge =>
+          config.packSide match {
+            case PackSide.Server =>
+              val version = component.version
+              val url = new URL(s"https://files.minecraftforge.net/maven/net/minecraftforge/forge/$version/forge-$version-universal.jar")
+              FileManager.writeStreamToFile(FileManager.retrieveUrl(url), Util.fileForComponent(component, config.minecraftDir))
+          }
+
       }
     }
   }
@@ -37,8 +46,8 @@ object Update {
 
     override def newVersion: Option[Component] = Some(component)
 
-    override def execute(minecraftDir: File): Unit = {
-      UpdatedComponent(component, component).execute(minecraftDir)
+    override def execute(config: MainConfig): Unit = {
+      UpdatedComponent(component, component).execute(config)
     }
   }
   case class UpdatedComponent(oldComponent: Component, newComponent: Component) extends Update {
@@ -46,9 +55,9 @@ object Update {
 
     override def newVersion: Option[Component] = Some(newComponent)
 
-    override def execute(minecraftDir: File): Unit = {
-      RemovedComponent(oldComponent).execute(minecraftDir)
-      NewComponent(newComponent).execute(minecraftDir)
+    override def execute(config: MainConfig): Unit = {
+      RemovedComponent(oldComponent).execute(config)
+      NewComponent(newComponent).execute(config)
     }
   }
   case class RemovedComponent(component: Component) extends Update {
@@ -56,10 +65,10 @@ object Update {
 
     override def newVersion: Option[Component] = None
 
-    override def execute(minecraftDir: File): Unit = {
+    override def execute(config: MainConfig): Unit = {
       component.componentType match {
         case ComponentType.Mod =>
-          Util.fileForComponent(component, minecraftDir).delete()
+          Util.fileForComponent(component, config.minecraftDir).delete()
         case ComponentType.Config | ComponentType.Resource =>
           println("Warning: Uninstallation of Config or Resource files not supported")
       }
