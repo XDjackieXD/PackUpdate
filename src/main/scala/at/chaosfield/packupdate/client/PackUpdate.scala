@@ -1,19 +1,17 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.client
 
-import javafx.application.Application
-import javafx.fxml.FXMLLoader
-import javafx.scene.Group
-import javafx.scene.Scene
-import javafx.scene.control.Alert
-import javafx.scene.control.Label
-import javafx.scene.control.TextArea
-import javafx.scene.layout.GridPane
-import javafx.scene.layout.Priority
-import javafx.scene.layout.VBox
-import javafx.scene.paint.Color
-import javafx.stage.Stage
 import java.io.IOException
 import java.util
+
+import at.chaosfield.packupdate.Client
+import at.chaosfield.packupdate.common.MainConfig
+import javafx.application.Application
+import javafx.fxml.FXMLLoader
+import javafx.scene.control.{Alert, Label, TextArea}
+import javafx.scene.layout.{GridPane, Priority, VBox}
+import javafx.scene.paint.Color
+import javafx.scene.{Group, Scene}
+import javafx.stage.Stage
 
 
 /**
@@ -22,22 +20,12 @@ import java.util
 class PackUpdate extends Application {
   protected var primaryStage: Stage = null
   protected var rootLayout: VBox = null
-  //The first parameter has to be the link to the online Pack Info CSV file,
-  //the second parameter has to be the location of the local Pack Info CSV file inside the modpack root and
-  //the third parameter has to be the path to the modpack root where the mods folder should go.
-  private[packupdate] var parameters: util.List[String] = null
+  private[packupdate] val config = Client.options
 
   @throws[Exception]
   override def start(primaryStage: Stage): Unit = {
     this.primaryStage = primaryStage
     this.primaryStage.setTitle("Updating")
-    parameters = this.getParameters.getRaw
-    if (parameters.size != 3) {
-      this.primaryStage.setScene(new Scene(new Group, 300, 300, Color.BLACK))
-      errorAlert("Wrong Parameters", "Pack Updater was provided with the wrong Parameters", "If you did not modify any instance settings\nplease contact the modpack author!")
-      primaryStage.close()
-      return
-    }
     initRootLayout()
   }
 
@@ -63,7 +51,6 @@ class PackUpdate extends Application {
     alert.setHeaderText("Something went wrong while updating your pack :(")
     val label = new Label("Log:")
     var textAreaText = ""
-    import scala.collection.JavaConversions._
     for (error <- errors) {
       textAreaText += "\n" + error
     }
@@ -94,9 +81,5 @@ class PackUpdate extends Application {
 
   def close(): Unit = {
     primaryStage.close()
-  }
-
-  def main(args: Array[String]): Unit = {
-    Application.launch(args:_*)
   }
 }

@@ -1,4 +1,4 @@
-package at.chaosfield.packupdate;
+package at.chaosfield.packupdate.common;
 
 public enum PackSide {
     Server,

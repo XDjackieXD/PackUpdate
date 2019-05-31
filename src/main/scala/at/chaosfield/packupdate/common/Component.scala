@@ -1,17 +1,17 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.common
 
-import java.io.{File, FileInputStream}
-import java.net.URL
-import java.security.MessageDigest
+import java.io.FileInputStream
+import java.net.{URI, URL}
 
+import at.chaosfield.packupdate.common.PackSide
 import org.apache.commons.codec.digest.DigestUtils
 
-class Component(val name: String, val version: String, val downloadUrl: Option[URL], val componentType: ComponentType, val hash: Option[String], val flags: Array[ComponentFlag]) {
+class Component(val name: String, val version: String, val downloadUrl: Option[URI], val componentType: ComponentType, val hash: Option[String], val flags: Array[ComponentFlag]) {
   def toCSV = {
     Array(
       name,
       version,
-      downloadUrl.toString,
+      downloadUrl.map(_.toString).getOrElse(""),
       componentType.stringValue,
       hash.getOrElse(""),
       flags.map(_.internalName).mkString(";")
@@ -19,9 +19,9 @@ class Component(val name: String, val version: String, val downloadUrl: Option[U
   }
 
   def verifyChecksum(config: MainConfig): Boolean = {
-    val file = Util.fileForComponent(this, config.minecraftDir)
     componentType match {
-      case ComponentType.Mod =>
+      case ComponentType.Mod | ComponentType.Forge =>
+        val file = Util.fileForComponent(this, config.minecraftDir)
         if (file.exists) {
           hash match {
             case Some(h) =>
@@ -55,7 +55,7 @@ object Component {
     new Component(
       data(0), // name
       data(1), // version
-      if (data(2).isEmpty) None else Some(new URL(data(2))), // downloadUrl
+      if (data(2).isEmpty) None else Some(new URI(data(2))), // downloadUrl
       ComponentType.fromString(data(3)).getOrElse(ComponentType.Unknown), // componentType
       data.lift(4).filter(_ != ""), // hash
       data.lift(5).map(_.split(';')).getOrElse(Array.empty[String]).flatMap(ComponentFlag.fromString) // flags

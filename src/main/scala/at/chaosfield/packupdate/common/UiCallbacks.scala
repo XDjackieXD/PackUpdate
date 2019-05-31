@@ -1,8 +1,4 @@
-package at.chaosfield.packupdate
-
-import com.sun.xml.internal.ws.api.message.Message
-
-import scala.concurrent.Channel
+package at.chaosfield.packupdate.common
 
 /**
   * These callbacks will be called in the background thread. Please ensure to not block longer than possible
@@ -16,14 +12,15 @@ trait UiCallbacks {
   def reportError(message: String, exception: Option[Exception]): Unit
 
   /**
-    * Show a progress indicator to the user
+    * Is the progress bar shown
+    * @return true if the progress bar is shown
     */
-  def showProgress()
+  def progressBar: Boolean
 
   /**
-    * Hide the previously shown progress indicator
+    * Show a progress indicator to the user
     */
-  def hideProgress()
+  def progressBar_=(value: Boolean)
 
   /**
     * Update progress indicator

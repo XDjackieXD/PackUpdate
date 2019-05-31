@@ -1,13 +1,12 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.common
 
-import java.io.{BufferedReader, File, FileInputStream, FileNotFoundException, FileOutputStream, FileReader, IOException, InputStream, InputStreamReader, OutputStream, PrintStream}
+import java.io._
 import java.net.{HttpURLConnection, URL, URLConnection}
 import java.util.zip.ZipInputStream
 
 import org.apache.commons.io.FileUtils
 
 import scala.annotation.tailrec
-import scala.util.control.Breaks._
 import scala.io.Source
 
 object FileManager {

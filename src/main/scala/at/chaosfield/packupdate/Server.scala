@@ -3,9 +3,11 @@ package at.chaosfield.packupdate
 import java.io.File
 import java.net.URL
 
+import at.chaosfield.packupdate.common.{ConflictResolution, MainConfig, MainLogic, PackSide, UiCallbacks, Util}
+import at.chaosfield.packupdate.server.Launcher
 import org.jline.terminal.TerminalBuilder
 
-object ServerMain {
+object Server {
 
   object CliCallbacks extends UiCallbacks {
 
@@ -33,18 +35,12 @@ object ServerMain {
     /**
       * Show a progress indicator to the user
       */
-    override def showProgress(): Unit = {
-      progressShown = true
+    override def progressBar_=(value: Boolean): Unit = {
+      progressShown = value
       redraw()
     }
 
-    /**
-      * Hide the previously shown progress indicator
-      */
-    override def hideProgress(): Unit = {
-      progressShown = false
-      redraw()
-    }
+    override def progressBar: Boolean = progressShown
 
     /**
       * Update progress indicator
@@ -78,7 +74,7 @@ object ServerMain {
 
     def redraw() = {
       val data = (if (progressShown) {
-        s"[$currentProgress/$currentTotal] "
+        s"[${currentProgress + 1}/$currentTotal] "
       } else {
         ""
       }) + currentStatus
@@ -97,18 +93,33 @@ object ServerMain {
     lazy val terminal = TerminalBuilder.terminal()
   }
 
-  def main(args: Array[String]): Unit = {
-    if (args.length < 1) {
-      println("Usage: java -jar packupdate-server.jar <url>")
-      println("Initializes everything needed for PackUpdate to run inside this directory")
-      return
-    }
-
-    val config = MainConfig(new File("."), PackSide.Server)
+  def run(config: MainConfig): Option[File] = {
     val logic = new MainLogic(CliCallbacks)
 
     val packupdateData = new File("packupdate")
-    packupdateData.mkdir()
-    logic.runUpdate(new URL(args(0)), new File(packupdateData, "local.cfg"), config)
+    packupdateData.mkdirs()
+    val localFile = new File(packupdateData, "local.cfg")
+    logic.runUpdate(localFile, config)
+
+    MainLogic.getRunnableJar(localFile, config.minecraftDir)
+  }
+
+  def main(args: Array[String]): Unit = {
+    if (args.length < 1) {
+      println("Usage: packupdate-server.jar <url>")
+    }
+
+    val config = new MainConfig(new File("."), new URL(args(0)), PackSide.Server)
+    val runnableJar = run(config)
+
+    if (args.length > 1) {
+      println("Launching Server...")
+      runnableJar match {
+        case Some(jar) => Launcher.launchServer(jar, args.tail)
+        case None => println("No runnable jar found, not launching server")
+      }
+    }
+
+
   }
 }

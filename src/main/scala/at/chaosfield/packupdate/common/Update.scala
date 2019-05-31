@@ -1,4 +1,4 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.common
 
 import java.io.File
 import java.net.URL
@@ -19,15 +19,15 @@ object Update {
     override def execute(config: MainConfig): Unit = {
       component.componentType match {
         case ComponentType.Mod =>
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get), Util.fileForComponent(component, config.minecraftDir))
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL), Util.fileForComponent(component, config.minecraftDir))
         case ComponentType.Config =>
           val file = File.createTempFile("packupdate", component.name + component.version)
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get), file)
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL), file)
           FileManager.extractZip(file, new File(config.minecraftDir, "config"))
           file.deleteOnExit()
         case ComponentType.Resource =>
           val file = File.createTempFile("packupdate", component.name + component.version)
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get), file)
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL), file)
           FileManager.extractZip(file, config.minecraftDir)
           file.deleteOnExit()
         case ComponentType.Forge =>
@@ -36,6 +36,8 @@ object Update {
               val version = component.version
               val url = new URL(s"https://files.minecraftforge.net/maven/net/minecraftforge/forge/$version/forge-$version-universal.jar")
               FileManager.writeStreamToFile(FileManager.retrieveUrl(url), Util.fileForComponent(component, config.minecraftDir))
+            case PackSide.Client =>
+              println("Warning: Skipping Forge on Side Client")
           }
 
       }

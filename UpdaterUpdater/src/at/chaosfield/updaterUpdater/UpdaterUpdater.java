@@ -54,7 +54,7 @@ public class UpdaterUpdater {
 
         try{
             JarRunner.addFile(new File(args[2] + File.separator + args[3]));
-            Method mainMethod = ClassLoader.getSystemClassLoader().loadClass("at.chaosfield.packupdate.PackUpdate").getDeclaredMethod("main", String[].class);
+            Method mainMethod = ClassLoader.getSystemClassLoader().loadClass("at.chaosfield.packupdate.client.PackUpdate").getDeclaredMethod("main", String[].class);
             mainMethod.invoke(null, (Object)new String[]{args[0], args[1], args[2]});
         }catch(IOException | InvocationTargetException | NoSuchMethodException | IllegalAccessException | ClassNotFoundException e){
             System.out.println("[PackUpdate Updater] Execution of PackUpdater failed");

@@ -1,4 +1,4 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.common
 
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{SocketTimeoutException, UnknownHostException}
@@ -10,7 +10,10 @@ object Util {
       case ComponentType.Mod =>
         val fileName = s"${component.name} - ${component.version}.jar"
         new File(minecraftDir, "mods/" + fileName)
-      case ComponentType.Forge => new File(minecraftDir, s"forge-${component.version}.jar")
+      case ComponentType.Forge =>
+        new File(minecraftDir, s"forge-${component.version}.jar")
+      case t =>
+        throw new Exception(s"ComponentType ${component.componentType.name()} does not have a dedicated file")
     }
   }
 

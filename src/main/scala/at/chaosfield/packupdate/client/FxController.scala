@@ -1,23 +1,16 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.client
 
-import javafx.concurrent.Task
-import javafx.fxml.FXML
-import javafx.scene.control.Label
-import javafx.scene.control.ProgressBar
-import javafx.stage.Stage
 import java.io.File
-import java.io.IOException
-import java.lang.Override
-import java.lang.String
 import java.net.URL
 import java.util
 
-import javafx.application.Application
+import at.chaosfield.packupdate.common._
+import javafx.concurrent.Task
 import javafx.event.Event
-import javafx.concurrent.Worker
+import javafx.fxml.FXML
+import javafx.scene.control.{Label, ProgressBar}
 
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.convert.ToJavaImplicits
 
 
 /**
@@ -26,26 +19,15 @@ import scala.collection.convert.ToJavaImplicits
 class FxController {
   @FXML private var status: Label = null
   @FXML private var progress: ProgressBar = null
-  private var parameters: util.List[String] = null
   private var main: PackUpdate = null
 
   def setMain(main: PackUpdate): Unit = {
     this.main = main
-    this.parameters = main.getParameters.getRaw
     val log = ArrayBuffer.empty[String]
     val updater = new Task[List[String]]() {
       override protected def call(): List[String] = {
 
         object GuiFeedback extends UiCallbacks {
-          /**
-            * Show a progress indicator to the user
-            */
-          override def showProgress(): Unit = Unit
-
-          /**
-            * Hide the previously shown progress indicator
-            */
-          override def hideProgress(): Unit = Unit
 
           /**
             * Update progress indicator
@@ -87,13 +69,21 @@ class FxController {
               case _ =>
             }
           }
+
+          /**
+            * Is the progress bar shown
+            *
+            * @return true if the progress bar is shown
+            */
+          override def progressBar: Boolean = false
+
+          /**
+            * Show a progress indicator to the user
+            */
+          override def progressBar_=(value: Boolean): Unit = ()
         }
 
-        val remote = new URL(parameters.get(0))
-        val local = new File(parameters.get(1))
-        val minecraftDir = new File(parameters.get(2))
-
-        new MainLogic(GuiFeedback).runUpdate(remote, local, new MainConfig(minecraftDir, PackSide.Client))
+        new MainLogic(GuiFeedback).runUpdate(new File(main.config.minecraftDir, "packupdate.local"), main.config)
         log.toList
       }
     }

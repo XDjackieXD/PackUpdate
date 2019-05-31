@@ -1,4 +1,4 @@
-package at.chaosfield.packupdate
+package at.chaosfield.packupdate.common
 
 import java.io.File
 import java.net.URL
@@ -6,12 +6,12 @@ import java.net.URL
 import scala.io.Source
 
 class MainLogic(ui: UiCallbacks) {
-  def runUpdate(remoteUrl: URL, localFile: File, config: MainConfig): Unit = {
+  def runUpdate(localFile: File, config: MainConfig): Unit = {
     try {
-      val localData = getLocalData(localFile)
+      val localData = MainLogic.getLocalData(localFile)
       ui.statusUpdate("Updating Pack Metadata...")
       val remoteData = FileManager
-        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(remoteUrl)))
+        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(config.remoteUrl)))
         .filter(c => c.neededOnSide(config.packSide))
 
       ui.statusUpdate("Calculating changes and checking integrity...")
@@ -19,7 +19,7 @@ class MainLogic(ui: UiCallbacks) {
 
       new File(config.minecraftDir, "mods").mkdirs()
 
-      ui.showProgress()
+      ui.progressBar = true
       updates.zipWithIndex.foreach { case (update, idx) =>
         val verb = update match {
           case Update.NewComponent(_) => "Installing"
@@ -37,7 +37,7 @@ class MainLogic(ui: UiCallbacks) {
             ui.reportError(s"Could not download ${update.name}: ${Util.exceptionToHumanReadable(e)}", Some(e))
         }
       }
-      ui.hideProgress()
+      ui.progressBar = false
       ui.statusUpdate("Writing local metadata")
       FileManager.writeMetadata(remoteData, localFile)
       ui.statusUpdate("Finished")
@@ -47,12 +47,18 @@ class MainLogic(ui: UiCallbacks) {
         ui.reportError("Internal Error while trying to perform Update", Some(e))
     }
   }
+}
 
+object MainLogic {
   def getLocalData(localFile: File): List[Component] = {
     if (localFile.exists) {
       FileManager.parsePackList(Source.fromFile(localFile, "UTF-8"))
     } else {
       List.empty[Component]
     }
+  }
+
+  def getRunnableJar(localFile: File, mcDir: File): Option[File] = {
+    getLocalData(localFile).find(c => c.componentType == ComponentType.Forge).map(Util.fileForComponent(_, mcDir))
   }
 }
