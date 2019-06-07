@@ -11,4 +11,4 @@ libraryDependencies += "org.jline" % "jline" % "3.11.0"
 libraryDependencies += "net.sourceforge.argparse4j" % "argparse4j" % "0.8.1"
 
 //lazy val updaterUpdater = (project in file("UpdaterUpdater"))
-Compile / mainClass := Some("at.chaosfield.packupdate.Main")
+Compile / mainClass := Some("at.chaosfield.packupdate.Client")
