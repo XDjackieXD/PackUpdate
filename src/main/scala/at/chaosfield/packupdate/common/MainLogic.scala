@@ -11,7 +11,7 @@ class MainLogic(ui: UiCallbacks) {
       val localData = MainLogic.getLocalData(localFile)
       ui.statusUpdate("Updating Pack Metadata...")
       val remoteData = FileManager
-        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(config.remoteUrl)))
+        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(config.remoteUrl, ui)))
         .filter(c => c.neededOnSide(config.packSide))
 
       ui.statusUpdate("Calculating changes and checking integrity...")
@@ -30,7 +30,7 @@ class MainLogic(ui: UiCallbacks) {
         ui.statusUpdate(s"$verb ${update.name}")
         ui.progressUpdate(idx, updates.length)
         try {
-          update.execute(config)
+          update.execute(config, ui)
         } catch {
           // TODO: Mark mod as failed
           case e: Exception =>

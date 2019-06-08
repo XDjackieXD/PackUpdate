@@ -8,7 +8,6 @@ import at.chaosfield.packupdate.common.{MainConfig, MainLogic, PackSide}
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, Namespace, Subparser}
-import sun.net.dns.ResolverConfiguration.Options
 
 import scala.collection.JavaConverters._
 

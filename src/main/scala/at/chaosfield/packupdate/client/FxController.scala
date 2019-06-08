@@ -23,7 +23,7 @@ class FxController {
 
   def setMain(main: PackUpdate): Unit = {
     this.main = main
-    val log = ArrayBuffer.empty[String]
+    val _log = ArrayBuffer.empty[String]
     val updater = new Task[List[String]]() {
       override protected def call(): List[String] = {
 
@@ -62,7 +62,7 @@ class FxController {
             * @param exception if this is associated with an exception, this exception
             */
           override def reportError(message: String, exception: Option[Exception]): Unit = {
-            log += message
+            _log += message
             println(message)
             exception match {
               case Some(e) => e.printStackTrace()
@@ -81,10 +81,14 @@ class FxController {
             * Show a progress indicator to the user
             */
           override def progressBar_=(value: Boolean): Unit = ()
+
+          override def log(logLevel: LogLevel, message: String): Unit = {
+            println(format_log(logLevel, message))
+          }
         }
 
         new MainLogic(GuiFeedback).runUpdate(new File(main.config.minecraftDir, "packupdate.local"), main.config)
-        log.toList
+        _log.toList
       }
     }
     progress.progressProperty.bind(updater.progressProperty)
