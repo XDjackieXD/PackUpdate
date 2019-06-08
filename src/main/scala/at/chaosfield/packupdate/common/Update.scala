@@ -22,8 +22,10 @@ object Update {
           FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL, log), Util.fileForComponent(component, config.minecraftDir))
         case ComponentType.Config =>
           val file = File.createTempFile("packupdate", component.name + component.version)
+          val configDir = new File(config.minecraftDir, "config")
           FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL, log), file)
-          FileManager.extractZip(file, new File(config.minecraftDir, "config"), log)
+          configDir.mkdirs()
+          FileManager.extractZip(file, configDir, log)
           file.deleteOnExit()
         case ComponentType.Resource =>
           val file = File.createTempFile("packupdate", component.name + component.version)
