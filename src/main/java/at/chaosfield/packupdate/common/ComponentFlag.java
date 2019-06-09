@@ -27,7 +27,22 @@ public enum ComponentFlag {
      * Normally PackUpdate will error if a file not maintained by PackUpdate would be overwritten. Setting this option will silently overwrite
      * any files. For config files this additionally means that any user changes to the config get overwritten each update
      */
-    ForceOverwrite("force_overwrite")
+    ForceOverwrite("force_overwrite"),
+
+    /**
+     * Marks this mod as optional.
+     *
+     * An optional mod can be disabled by the end user in MultiMC and PackUpdate will leave it that way.
+     * Any update will be applied without enabling the mod
+     */
+    Optional("optional"),
+
+    /**
+     * Makes the mod be disabled from MultiMCs perspective
+     *
+     * This Option is only really useful in combination with Optional. It makes the mod disabled by default, but possible to enable by the user
+     */
+    Disabled("disabled")
 
     ;
 

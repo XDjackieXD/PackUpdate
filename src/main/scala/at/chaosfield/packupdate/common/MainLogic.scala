@@ -17,6 +17,17 @@ class MainLogic(ui: UiCallbacks) {
       ui.statusUpdate("Calculating changes and checking integrity...")
       val updates = FileManager.getUpdates(localData, remoteData, config)
 
+      // TODO: Remove temporary fix to transition system
+      localData
+        .filter(c => c.componentType == ComponentType.Forge || c.componentType == ComponentType.Mod)
+        .foreach(component => {
+          val legacyName = Util.fileForComponent(component, config.minecraftDir, legacy = true)
+          val name = Util.fileForComponent(component, config.minecraftDir)
+          if (name != legacyName && legacyName.exists()) {
+            legacyName.delete()
+          }
+        })
+
       new File(config.minecraftDir, "mods").mkdirs()
 
       ui.progressBar = true
