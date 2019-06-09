@@ -3,7 +3,6 @@ package at.chaosfield.packupdate.common
 import java.io.FileInputStream
 import java.net.{URI, URL}
 
-import at.chaosfield.packupdate.common.PackSide
 import org.apache.commons.codec.digest.DigestUtils
 
 class Component(val name: String, val version: String, val downloadUrl: Option[URI], val componentType: ComponentType, val hash: Option[String], val flags: Array[ComponentFlag]) {

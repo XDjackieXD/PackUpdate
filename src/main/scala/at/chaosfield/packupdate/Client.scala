@@ -18,6 +18,11 @@ object Client {
   }
 
   def main(args: Array[String]) = {
+    if (args.length != 1) {
+      println("Usage: java -jar PackUpdate.jar <url>")
+      System.exit(1)
+    }
+
     run(new MainConfig(new File(Option(System.getenv("INST_MC_DIR")).get), new URL(args(0)), PackSide.Client))
   }
 }

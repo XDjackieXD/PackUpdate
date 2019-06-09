@@ -13,7 +13,7 @@ object FileManager {
   final val UserAgent = "PackUpdate Automated Mod Updater"
 
   //open an online file for reading.
-  def getOnlineFile(fileUrl: String) = new BufferedReader(new InputStreamReader(new URL(fileUrl).openStream))
+  def getOnlineFile(fileUrl: URL) = new BufferedReader(new InputStreamReader(fileUrl.openStream))
 
   def deleteLocalFile(fileName: String): Boolean = new File(fileName).delete()
 
@@ -59,11 +59,11 @@ object FileManager {
   def parsePackList(packList: Source): List[Component] =
     packList.getLines().filter(l => l.length() > 0 && !l.startsWith("#")).map(s => Component.fromCSV(s.split(","))).toList
 
-  def retrieveUrl(url: URL): InputStream = {
-    //println(s"Downloading $url")
+  def retrieveUrl(url: URL, log: Log): InputStream = {
+    log.debug(s"Downloading $url")
     @tailrec
     def request(url: URL): URLConnection = {
-      //println(s" -> Trying $url")
+      log.debug(s" -> Trying $url")
       val con = url.openConnection
       con.setRequestProperty("user-Agent", UserAgent)
       con.setConnectTimeout(5000)
@@ -109,7 +109,7 @@ object FileManager {
     * @param dest the directory to extract to
     * @return A map with the key being the file names and the value being the sha256 sum
     */
-  def extractZip(zipFile: File, dest: File): Map[String, String] = {
+  def extractZip(zipFile: File, dest: File, log: Log): Map[String, String] = {
     dest.mkdirs()
     val zipStream = new ZipInputStream(new FileInputStream(zipFile))
 
@@ -122,11 +122,11 @@ object FileManager {
         if (entry.isDirectory) {
           file.mkdir()
         } else {
-          //println(s"Extract $file")
+          log.debug(s"Extract $file")
           FileManager.writeStreamToFile(zipStream, file)
         }
       } else {
-        //println("Warning: Attempt for directory traversal blocked")
+        log.warning("Attempt for directory traversal blocked")
       }
 
       entry = zipStream.getNextEntry

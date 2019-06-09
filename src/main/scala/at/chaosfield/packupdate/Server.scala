@@ -3,7 +3,7 @@ package at.chaosfield.packupdate
 import java.io.File
 import java.net.URL
 
-import at.chaosfield.packupdate.common.{ConflictResolution, MainConfig, MainLogic, PackSide, UiCallbacks, Util}
+import at.chaosfield.packupdate.common.{ConflictResolution, LogLevel, MainConfig, MainLogic, PackSide, UiCallbacks, Util}
 import at.chaosfield.packupdate.server.Launcher
 import org.jline.terminal.TerminalBuilder
 
@@ -91,6 +91,11 @@ object Server {
     }
 
     lazy val terminal = TerminalBuilder.terminal()
+
+    override def log(logLevel: LogLevel, message: String): Unit = {
+      println(format_log(logLevel, message))
+      redraw()
+    }
   }
 
   def run(config: MainConfig): Option[File] = {

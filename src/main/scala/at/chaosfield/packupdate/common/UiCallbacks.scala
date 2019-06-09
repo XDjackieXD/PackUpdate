@@ -3,7 +3,7 @@ package at.chaosfield.packupdate.common
 /**
   * These callbacks will be called in the background thread. Please ensure to not block longer than possible
   */
-trait UiCallbacks {
+trait UiCallbacks extends Log {
   /**
     *
     * @param message the message to display
