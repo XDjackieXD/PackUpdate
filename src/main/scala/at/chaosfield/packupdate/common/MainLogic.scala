@@ -3,11 +3,25 @@ package at.chaosfield.packupdate.common
 import java.io.File
 import java.net.URL
 
+import org.apache.commons.io.FileUtils
+
+import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 class MainLogic(ui: UiCallbacks) {
-  def runUpdate(localFile: File, config: MainConfig): Unit = {
+  def runUpdate(config: MainConfig): Unit = {
     try {
+      val packupdateData = new File(config.minecraftDir, "packupdate")
+      packupdateData.mkdirs()
+
+      val legacyLocalFile = new File(config.minecraftDir, "packupdate.local")
+      val localFile = new File(packupdateData, "local.cfg")
+
+      if (legacyLocalFile.exists() && !localFile.exists()) {
+        ui.info("Local state present in legacy location, moving to latest")
+        FileUtils.moveFile(legacyLocalFile, localFile)
+      }
+
       val localData = MainLogic.getLocalData(localFile)
       ui.statusUpdate("Updating Pack Metadata...")
       val remoteData = FileManager
@@ -16,6 +30,7 @@ class MainLogic(ui: UiCallbacks) {
 
       ui.statusUpdate("Calculating changes and checking integrity...")
       val updates = FileManager.getUpdates(localData, remoteData, config)
+      val failedComponents = ArrayBuffer.empty[Component]
 
       // TODO: Remove temporary fix to transition system
       localData
@@ -46,11 +61,12 @@ class MainLogic(ui: UiCallbacks) {
           // TODO: Mark mod as failed
           case e: Exception =>
             ui.reportError(s"Could not download ${update.name}: ${Util.exceptionToHumanReadable(e)}", Some(e))
+            failedComponents += update.newOrOld
         }
       }
       ui.progressBar = false
       ui.statusUpdate("Writing local metadata")
-      FileManager.writeMetadata(remoteData, localFile)
+      FileManager.writeMetadata(remoteData.filterNot(failedComponents.contains), localFile)
       ui.statusUpdate("Finished")
     } catch {
       case e: Exception =>
@@ -69,7 +85,8 @@ object MainLogic {
     }
   }
 
-  def getRunnableJar(localFile: File, mcDir: File): Option[File] = {
+  def getRunnableJar(mcDir: File): Option[File] = {
+    val localFile = new File(mcDir, "packupdate" + File.separator + "local.cfg")
     getLocalData(localFile).find(c => c.componentType == ComponentType.Forge).map(Util.fileForComponent(_, mcDir))
   }
 }

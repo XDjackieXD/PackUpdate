@@ -16,7 +16,7 @@ public enum ComponentFlag {
     /**
      * This mod is only needed on the client and wont be installed on the server
      *
-     * Setting both this option and [[ClientOnly]] is undefined behaviour (In current implementation,
+     * Setting both this option and [[ServerOnly]] is undefined behaviour (In current implementation,
      * a component with both flags would not be installed on any side)
      */
     ClientOnly("client_only"),

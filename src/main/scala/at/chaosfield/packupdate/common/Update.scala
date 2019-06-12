@@ -6,7 +6,8 @@ import java.net.URL
 sealed abstract class Update {
   def oldVersion: Option[Component]
   def newVersion: Option[Component]
-  def name = oldVersion.orElse(newVersion).get.name
+  def name = newOrOld.name
+  def newOrOld: Component = newVersion.orElse(oldVersion).get
   def execute(config: MainConfig, logLevel: Log)
 }
 
