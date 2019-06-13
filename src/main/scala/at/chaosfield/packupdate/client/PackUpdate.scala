@@ -13,10 +13,6 @@ import javafx.scene.paint.Color
 import javafx.scene.{Group, Scene}
 import javafx.stage.Stage
 
-
-/**
-  * Created by Jakob (XDjackieXD) Riepler
-  */
 class PackUpdate extends Application {
   protected var primaryStage: Stage = null
   protected var rootLayout: VBox = null

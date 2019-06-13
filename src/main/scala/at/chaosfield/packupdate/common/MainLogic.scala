@@ -3,10 +3,13 @@ package at.chaosfield.packupdate.common
 import java.io.File
 import java.net.URL
 
+import at.chaosfield.packupdate.Main
+
 import scala.io.Source
 
 class MainLogic(ui: UiCallbacks) {
   def runUpdate(localFile: File, config: MainConfig): Unit = {
+    ui.info(s"PackUpdate Version: ${Main.Version}")
     try {
       val localData = MainLogic.getLocalData(localFile)
       ui.statusUpdate("Updating Pack Metadata...")
