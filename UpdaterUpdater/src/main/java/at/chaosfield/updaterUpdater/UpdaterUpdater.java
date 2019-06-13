@@ -50,6 +50,7 @@ public class UpdaterUpdater {
 
         Properties prop = new Properties();
         prop.setProperty("beta", "false");
+        prop.setProperty("forceVersion", "");
 
         try {
             if (propertyFile.exists()) {
@@ -61,6 +62,10 @@ public class UpdaterUpdater {
         }
 
         boolean beta = prop.getProperty("beta").equalsIgnoreCase("true");
+        String force_version = prop.getProperty("forceVersion");
+        if (force_version.equals("")) {
+            force_version = null;
+        }
 
         try {
 
@@ -75,9 +80,9 @@ public class UpdaterUpdater {
         }
 
         try {
-            if (version == null || hasUpdate(version, beta)) {
+            if (version == null || hasUpdate(version, beta, force_version)) {
                 System.out.println("PackUpdate Update available, downloading...");
-                if (!downloadPackUpdate(packupdateFile.getPath(), beta)) {
+                if (!downloadPackUpdate(packupdateFile.getPath(), beta, force_version)) {
                     System.err.println("[PackUpdate Updater] Update Failed.");
                 }
             }
@@ -120,28 +125,37 @@ public class UpdaterUpdater {
 
     }
 
-    public static JSONObject getReleaseForBranch(boolean beta) throws IOException {
+    public static JSONObject getReleaseForBranch(boolean beta, String force_version) throws IOException {
          JSONArray data = getJSON(apiUrl);
          for (Object foo: data) {
              JSONObject release = (JSONObject) foo;
-             if (release.getBoolean("draft")) {
-                 continue;
-             }
+             if (force_version == null) {
+                 if (release.getBoolean("draft")) {
+                     continue;
+                 }
 
-             if (beta || !release.getBoolean("prerelease")) {
-                 return release;
+                 if (beta || !release.getBoolean("prerelease")) {
+                     return release;
+                 }
+             } else {
+                 if (release.getString("tag_name") == force_version) {
+                     return release;
+                 }
              }
          }
-         throw new RuntimeException("No releases found");
+         throw new RuntimeException(String.format("[PackUpdate Updater] No release found - channel: %s, force_version: %s \n", beta ? "beta" : "stable", force_version == null ? "none" : force_version));
     }
 
-    public static boolean hasUpdate(String version, boolean beta) throws IOException {
-        JSONObject jsonObject = getReleaseForBranch(beta);
+    public static boolean hasUpdate(String version, boolean beta, String force_version) throws IOException {
+        if (force_version != null) {
+            return !force_version.equals(version);
+        }
+        JSONObject jsonObject = getReleaseForBranch(beta, null);
         return !(jsonObject.get("tag_name")).equals(version);
     }
 
-    public static boolean downloadPackUpdate(String path, boolean beta) throws IOException {
-        JSONObject jsonRelease = getReleaseForBranch(beta);
+    public static boolean downloadPackUpdate(String path, boolean beta, String force_version) throws IOException {
+        JSONObject jsonRelease = getReleaseForBranch(beta, force_version);
 
         for (Object asset: jsonRelease.getJSONArray("assets")) {
             if (((JSONObject) asset).getString("name").startsWith("PackUpdate")) {
