@@ -1,6 +1,8 @@
 package at.chaosfield.packupdate.common
 
 import java.io.File
+
+import at.chaosfield.packupdate.Main
 import org.apache.commons.io.FileUtils
 
 import scala.collection.mutable.ArrayBuffer
@@ -8,6 +10,7 @@ import scala.io.Source
 
 class MainLogic(ui: UiCallbacks) {
   def runUpdate(config: MainConfig): Unit = {
+    ui.info(s"Packupdate Version: ${Main.Version}")
     try {
       val packupdateData = new File(config.minecraftDir, "packupdate")
       packupdateData.mkdirs()

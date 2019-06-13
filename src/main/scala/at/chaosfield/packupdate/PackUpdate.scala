@@ -1,3 +1,5 @@
+package at.chaosfield.packupdate
+
 import javax.swing.JOptionPane
 
 /**
