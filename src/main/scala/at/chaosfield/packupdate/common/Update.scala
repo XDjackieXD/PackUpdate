@@ -6,7 +6,8 @@ import java.net.URL
 sealed abstract class Update {
   def oldVersion: Option[Component]
   def newVersion: Option[Component]
-  def name = oldVersion.orElse(newVersion).get.name
+  def name = newOrOld.name
+  def newOrOld: Component = newVersion.orElse(oldVersion).get
   def execute(config: MainConfig, logLevel: Log)
 }
 
@@ -17,9 +18,14 @@ object Update {
     override def newVersion: Option[Component] = Some(component)
 
     override def execute(config: MainConfig, log: Log): Unit = {
+      log.debug(s"NewComponent(${component.display}).execute()")
+      executeInternal(config, component.flags.contains(ComponentFlag.Disabled), log)
+    }
+
+    def executeInternal(config: MainConfig, disabled: Boolean, log: Log): Unit = {
       component.componentType match {
         case ComponentType.Mod =>
-          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL, log), Util.fileForComponent(component, config.minecraftDir))
+          FileManager.writeStreamToFile(FileManager.retrieveUrl(component.downloadUrl.get.toURL, log), Util.fileForComponent(component, config.minecraftDir, disabled = disabled))
         case ComponentType.Config =>
           val file = File.createTempFile("packupdate", component.name + component.version)
           val configDir = new File(config.minecraftDir, "config")
@@ -61,7 +67,9 @@ object Update {
     override def newVersion: Option[Component] = Some(component)
 
     override def execute(config: MainConfig, log: Log): Unit = {
-      UpdatedComponent(component, component).execute(config, log)
+      log.debug(s"InvalidComponent(${component.display}).execute()")
+      RemovedComponent(component).execute(config, log)
+      NewComponent(component).executeInternal(config, component.flags.contains(ComponentFlag.Disabled), log)
     }
   }
   case class UpdatedComponent(oldComponent: Component, newComponent: Component) extends Update {
@@ -70,8 +78,14 @@ object Update {
     override def newVersion: Option[Component] = Some(newComponent)
 
     override def execute(config: MainConfig, log: Log): Unit = {
+      log.debug(s"NewComponent(${oldComponent.display}, ${newComponent.display}).execute()")
+      val disabled = if (newComponent.flags.contains(ComponentFlag.Optional)) {
+        oldComponent.componentType == ComponentType.Mod && Util.fileForComponent(oldComponent, config.minecraftDir, disabled = true).exists()
+      } else {
+        newComponent.flags.contains(ComponentFlag.Disabled)
+      }
       RemovedComponent(oldComponent).execute(config, log)
-      NewComponent(newComponent).execute(config, log)
+      NewComponent(newComponent).executeInternal(config, disabled, log)
     }
   }
   case class RemovedComponent(component: Component) extends Update {
@@ -80,9 +94,11 @@ object Update {
     override def newVersion: Option[Component] = None
 
     override def execute(config: MainConfig, log: Log): Unit = {
+      log.debug(s"RemovedComponent(${component.display}).execute()")
       component.componentType match {
-        case ComponentType.Mod =>
+        case ComponentType.Mod | ComponentType.Forge | ComponentType.Minecraft =>
           Util.fileForComponent(component, config.minecraftDir).delete()
+          Util.fileForComponent(component, config.minecraftDir, disabled = true).delete()
         case ComponentType.Config | ComponentType.Resource =>
           println("Warning: Uninstallation of Config or Resource files not supported")
       }

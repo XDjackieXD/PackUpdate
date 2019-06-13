@@ -101,12 +101,9 @@ object Server {
   def run(config: MainConfig): Option[File] = {
     val logic = new MainLogic(CliCallbacks)
 
-    val packupdateData = new File("packupdate")
-    packupdateData.mkdirs()
-    val localFile = new File(packupdateData, "local.cfg")
-    logic.runUpdate(localFile, config)
+    logic.runUpdate(config)
 
-    MainLogic.getRunnableJar(localFile, config.minecraftDir)
+    MainLogic.getRunnableJar(config.minecraftDir)
   }
 
   def main(args: Array[String]): Unit = {

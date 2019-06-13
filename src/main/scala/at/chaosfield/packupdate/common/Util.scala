@@ -5,10 +5,14 @@ import java.net.{SocketTimeoutException, UnknownHostException}
 import java.nio.file.Files
 
 object Util {
-  def fileForComponent(component: Component, minecraftDir: File): File = {
+  def fileForComponent(component: Component, minecraftDir: File, legacy: Boolean = false, disabled: Boolean = false): File = {
     component.componentType match {
       case ComponentType.Mod =>
-        val fileName = s"${component.name} - ${component.version}.jar"
+        val fileNamePre = s"${component.name} - ${component.version}.jar" + (if (disabled) { ".disabled" } else { "" })
+        val fileName = if (legacy)
+          fileNamePre
+        else
+          fileNamePre.replaceAll("[^a-zA-Z0-9_\\.\\- ]", "_")
         new File(minecraftDir, "mods/" + fileName)
       case ComponentType.Forge =>
         new File(minecraftDir, s"forge-${component.version}.jar")

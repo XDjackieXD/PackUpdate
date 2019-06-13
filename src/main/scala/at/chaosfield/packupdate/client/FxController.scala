@@ -5,6 +5,7 @@ import java.net.URL
 import java.util
 
 import at.chaosfield.packupdate.common._
+import javafx.beans.property.{DoubleProperty, SimpleBooleanProperty, SimpleDoubleProperty}
 import javafx.concurrent.Task
 import javafx.event.Event
 import javafx.fxml.FXML
@@ -25,6 +26,7 @@ class FxController {
     this.main = main
     val _log = ArrayBuffer.empty[String]
     val updater = new Task[List[String]]() {
+      val progressBarShown = new SimpleBooleanProperty(this, "progress", false)
       override protected def call(): List[String] = {
 
         object GuiFeedback extends UiCallbacks {
@@ -75,23 +77,26 @@ class FxController {
             *
             * @return true if the progress bar is shown
             */
-          override def progressBar: Boolean = false
+          override def progressBar: Boolean = progressBarShown.get()
 
           /**
             * Show a progress indicator to the user
             */
-          override def progressBar_=(value: Boolean): Unit = ()
+          override def progressBar_=(value: Boolean): Unit = {
+            progressBarShown.set(value)
+          }
 
           override def log(logLevel: LogLevel, message: String): Unit = {
             println(format_log(logLevel, message))
           }
         }
 
-        new MainLogic(GuiFeedback).runUpdate(new File(main.config.minecraftDir, "packupdate.local"), main.config)
+        new MainLogic(GuiFeedback).runUpdate(main.config)
         _log.toList
       }
     }
     progress.progressProperty.bind(updater.progressProperty)
+    progress.visibleProperty().bindBidirectional(updater.progressBarShown)
     status.textProperty.bind(updater.messageProperty)
 
     updater.setOnSucceeded((t: Event) => {
