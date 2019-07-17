@@ -1,4 +1,4 @@
-package at.chaosfield.updaterUpdater;
+package at.chaosfield.updaterupdater;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;

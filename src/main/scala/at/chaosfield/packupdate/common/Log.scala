@@ -10,3 +10,7 @@ trait Log {
     s"[${logLevel.name}] $message"
   }
 }
+
+object StdoutLog extends Log {
+  override def log(logLevel: LogLevel, message: String): Unit = println(s"[$logLevel] $message")
+}

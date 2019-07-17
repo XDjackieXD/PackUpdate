@@ -1,11 +1,17 @@
 package at.chaosfield.packupdate.common
 
 import java.io.{File, FileNotFoundException, IOException}
-import java.net.{SocketTimeoutException, UnknownHostException}
+import java.net.{SocketTimeoutException, URL, UnknownHostException}
 import java.nio.file.Files
 
+import org.json.{JSONArray, JSONObject}
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.JavaConverters._
+import scala.io.Source
+
 object Util {
-  def fileForComponent(component: Component, minecraftDir: File, legacy: Boolean = false, disabled: Boolean = false): File = {
+   def fileForComponent(component: Component, minecraftDir: File, legacy: Boolean = false, disabled: Boolean = false): File = {
     component.componentType match {
       case ComponentType.Mod =>
         val fileNamePre = s"${component.name} - ${component.version}.jar" + (if (disabled) { ".disabled" } else { "" })
@@ -41,4 +47,80 @@ object Util {
       override def run(): Unit = dir.delete()
     })
   }
+
+  def parseCommandLine(commandLine: String): Array[String] = {
+    val ret = ArrayBuffer.empty[String]
+    var tmp: Option[String] = None
+    var escape = false
+    var quotedString = false
+
+    def appendChar(c: Char): Unit = {
+      tmp = Some(tmp.getOrElse("") + c)
+    }
+
+    def endToken(): Unit = {
+      tmp match {
+        case Some(token) => ret += token
+        case None =>
+      }
+      tmp = None
+    }
+
+    commandLine.foreach(c =>
+      if (escape) {
+        escape = false
+        appendChar(c)
+      } else {
+        c match {
+          case '\\' => escape = true
+          case '"' | '\'' => quotedString = !quotedString
+          case ' ' | '\t' if !quotedString => endToken()
+          case _ => appendChar(c)
+        }
+      })
+
+    endToken()
+
+    ret.toArray
+  }
+
+  def unparseCommandLine(params: Array[String]): String = {
+    params
+      .map(param => {
+        param
+          .replace("\\", "\\\\")
+          .replace("\"", "\\\"")
+      })
+      .map(param => {
+        if (param.contains(" ") || param.contains("\\") || param.contains("$")) {
+          '"' + param + '"'
+        } else {
+          param
+        }
+      })
+      .mkString
+  }
+
+  def exit(code: Int): Nothing = {
+    System.exit(code)
+    throw new Exception("Unreachable code! exit() was called but program did not exit")
+  }
+
+  def getJSON(url: URL, log: Log): JSONArray = new JSONArray(Source.fromInputStream(FileManager.retrieveUrl(url, log)).mkString)
+
+  def getRelease(url: URL, log: Log): JSONObject = getJSON(url, log).getJSONObject(0)
+
+  def getUpdaterUpdaterPath(url: URL, log: Log): String =
+    getRelease(url, log)
+      .getJSONArray("assets")
+      .asScala
+      .asInstanceOf[Iterable[JSONObject]]
+      .find(
+        _
+          .getString("name")
+          .startsWith("UpdaterUpdater")
+      )
+      .get
+      .getString("browser_download_url")
+
 }

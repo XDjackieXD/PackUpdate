@@ -1,7 +1,6 @@
-package at.chaosfield.updaterUpdater;
+package at.chaosfield.updaterupdater;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -9,11 +8,9 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Properties;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
 
 /**
  * Created by Jakob (XDjackieXD) Riepler
@@ -138,7 +135,7 @@ public class UpdaterUpdater {
                      return release;
                  }
              } else {
-                 if (release.getString("tag_name") == force_version) {
+                 if (release.getString("tag_name").equals(force_version)) {
                      return release;
                  }
              }
