@@ -13,6 +13,7 @@ libraryDependencies += "org.jline" % "jline" % "3.11.0"
 libraryDependencies += "net.sourceforge.argparse4j" % "argparse4j" % "0.8.1"
 libraryDependencies += "org.eclipse.aether" % "aether-api" % "1.1.0"
 libraryDependencies += "org.json" % "json" % "20180813"
+libraryDependencies += "org.json4s" % "json4s-jackson_2.12" % "3.6.7"
 
 //lazy val updaterUpdater = (project in file("UpdaterUpdater"))
 Compile / mainClass := Some("at.chaosfield.packupdate.Client")

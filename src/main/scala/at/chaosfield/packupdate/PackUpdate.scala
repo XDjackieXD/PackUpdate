@@ -1,9 +1,10 @@
 package at.chaosfield.packupdate
 
 import java.io.File
-import java.net.URL
+import java.net.{URL, URLClassLoader}
+import java.util.jar.{JarFile, Manifest}
 
-import at.chaosfield.packupdate.common.{StdoutLog, Util}
+import at.chaosfield.packupdate.common.{FileManager, MainConfig, StdoutLog, Util}
 import javax.swing.JOptionPane
 
 import scala.io.Source
@@ -56,16 +57,49 @@ object PackUpdate {
 
     val preLaunchParts = Util.parseCommandLine(preLaunch)
 
+    val log = StdoutLog
+
     preLaunchParts.length match {
       case 4 if preLaunchParts(0) == "java" || preLaunchParts(1) == "-jar" =>
         // Already converted
         println("Seems we already converted the instance.cfg and MultiMC did not reload the instance yet")
+
+      case 6 if preLaunchParts(0) == "java" || preLaunchParts(1) == "-jar" =>
+
+        JOptionPane.showMessageDialog(null, "Apparently i already updated MultiMC to use the new UpdaterUpdater, however MultiMC still launched the old Version. Restart MultiMC and try again")
+
+        Util.exit(-1)
+
       case 7 if preLaunchParts(0) == "java" || preLaunchParts(1) == "-jar" =>
         // Legacy format
         println("Downloading latest UpdaterUpdater...")
-        val path = Util.getUpdaterUpdaterPath(new URL("https://api.github.com/repos/XDjackieXD/PackUpdate/releases"), StdoutLog)
+        val path = Util.getUpdaterUpdaterPath(new URL("https://api.github.com/repos/XDjackieXD/PackUpdate/releases"), log)
         println(s"Found UpdaterUpdater at $path")
 
+        val packupdateDir = new File(System.getenv("INST_MC_DIR"), "packupdate")
+
+        packupdateDir.mkdirs()
+
+        val (fileName, idx) = preLaunchParts.zipWithIndex.find(_._1.endsWith(".jar")).get
+
+        val updaterUpdaterJar = new File(packupdateDir, "UpdaterUpdater.jar")
+
+        FileManager.writeStreamToFile(FileManager.retrieveUrl(new URL(path), log), updaterUpdaterJar)
+
+        preLaunchParts(idx) = "$INST_MC_DIR/packupdate/UpdaterUpdater.jar"
+
+        val finalConfig =
+          (config + ("PreLaunchCommand" -> Util.unparseCommandLine(preLaunchParts.init)))
+            .map(s => s"${s._1}=${s._2}").mkString("\n")
+
+        //println(finalConfig)
+
+        // Update MultiMC Config
+        FileManager.writeStringToFile(instConfig, finalConfig)
+
+        JOptionPane.showMessageDialog(null, "Hi there! I just updated UpdaterUpdater to a new version. This new version will be used upon next launch of this instance. Please reload and restart the MultiMC instance to continue")
+
+        Util.exit(-1)
 
       case _ =>
         // This is an anknown state

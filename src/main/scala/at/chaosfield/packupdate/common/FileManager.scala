@@ -133,4 +133,11 @@ object FileManager {
     }
     Map.empty[String, String]
   }
+
+  def writeStringToFile(file: File, string: String): Unit = {
+    val stream = new FileWriter(file)
+    stream.write(string)
+    stream.flush()
+    stream.close()
+  }
 }

@@ -4,11 +4,15 @@ import java.io.{File, FileNotFoundException, IOException}
 import java.net.{SocketTimeoutException, URL, UnknownHostException}
 import java.nio.file.Files
 
+import at.chaosfield.packupdate.json.GithubRelease
 import org.json.{JSONArray, JSONObject}
+import org.json4s._
+import org.json4s.jackson.JsonMethods
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 import scala.io.Source
+import scala.reflect.ClassTag
 
 object Util {
    def fileForComponent(component: Component, minecraftDir: File, legacy: Boolean = false, disabled: Boolean = false): File = {
@@ -98,7 +102,7 @@ object Util {
           param
         }
       })
-      .mkString
+      .mkString(" ")
   }
 
   def exit(code: Int): Nothing = {
@@ -106,21 +110,13 @@ object Util {
     throw new Exception("Unreachable code! exit() was called but program did not exit")
   }
 
-  def getJSON(url: URL, log: Log): JSONArray = new JSONArray(Source.fromInputStream(FileManager.retrieveUrl(url, log)).mkString)
+  def getReleases(url: URL, log: Log): Array[GithubRelease] = {
+    val value = JsonMethods.parse(Source.fromInputStream(FileManager.retrieveUrl(url, log)).mkString)
 
-  def getRelease(url: URL, log: Log): JSONObject = getJSON(url, log).getJSONObject(0)
+    value.camelizeKeys.extract[Array[GithubRelease]](org.json4s.DefaultFormats, manifest[Array[GithubRelease]])
+  }
 
   def getUpdaterUpdaterPath(url: URL, log: Log): String =
-    getRelease(url, log)
-      .getJSONArray("assets")
-      .asScala
-      .asInstanceOf[Iterable[JSONObject]]
-      .find(
-        _
-          .getString("name")
-          .startsWith("UpdaterUpdater")
-      )
-      .get
-      .getString("browser_download_url")
+    getReleases(url, log)(0).assets.find(_.name.startsWith("UpdaterUpdater")).get.browserDownloadUrl
 
 }
