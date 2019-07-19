@@ -1,12 +1,13 @@
 package at.chaosfield.packupdate.json
 
+import java.net.URI
 import java.util.Date
 
 case class GithubRelease(
                           id: Int,
-                          url: String,
-                          assetsUrl: String,
-                          htmlUrl: String,
+                          url: URI,
+                          assetsUrl: URI,
+                          htmlUrl: URI,
                           nodeId: String,
                           tagName: String,
                           targetCommitish: String,
@@ -17,8 +18,8 @@ case class GithubRelease(
                           createdAt: Date,
                           publishedAt: Date,
                           assets: Array[GithubAsset],
-                          tarballUrl: String,
-                          zipballUrl: String,
+                          tarballUrl: URI,
+                          zipballUrl: URI,
                           body: String
                         )
 
@@ -28,17 +29,17 @@ case class GithubUser(
                       nodeId: String,
                       avatarUrl: String,
                       gravatarId: String,
-                      url: String,
-                      htmlUrl: String,
-                      followersUrl: String,
-                      followingUrl: String,
-                      gistsUrl: String,
-                      starredUrl: String,
-                      subscriptionsUrl: String,
-                      organizationsUrl: String,
-                      reposUrl: String,
-                      eventsUrl: String,
-                      receivedEventsUrl: String,
+                      url: URI,
+                      htmlUrl: URI,
+                      followersUrl: URI,
+                      followingUrl: URI,
+                      gistsUrl: URI,
+                      starredUrl: URI,
+                      subscriptionsUrl: URI,
+                      organizationsUrl: URI,
+                      reposUrl: URI,
+                      eventsUrl: URI,
+                      receivedEventsUrl: URI,
                       `type`: String,
                       siteAdmin: Boolean
                      )
@@ -46,7 +47,7 @@ case class GithubUser(
 case class GithubAsset(
                         id: Int,
                         nodeId: String,
-                        url: String,
+                        url: URI,
                         name: String,
                         label: Option[String],
                         uploader: GithubUser,
@@ -54,5 +55,5 @@ case class GithubAsset(
                         downloadCount: Int,
                         createdAt: Date,
                         updatedAt: Date,
-                        browserDownloadUrl: String
+                        browserDownloadUrl: URI
                       )

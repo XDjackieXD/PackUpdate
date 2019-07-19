@@ -1,13 +1,10 @@
 package at.chaosfield.packupdate
 
 import java.io.File
-import java.net.{URL, URLClassLoader}
-import java.util.jar.{JarFile, Manifest}
+import java.net.URL
 
-import at.chaosfield.packupdate.common.{FileManager, MainConfig, StdoutLog, Util}
+import at.chaosfield.packupdate.common.{FileManager, StdoutLog, Util}
 import javax.swing.JOptionPane
-
-import scala.io.Source
 
 /**
   * This file exists purely for backwards compatibility. This class has the name of the old main class and will be launched by
@@ -43,16 +40,7 @@ object PackUpdate {
 
     val instConfig = new File(System.getenv("INST_DIR"), "instance.cfg")
 
-    val config = Source
-      .fromFile(instConfig, "UTF-8")
-      .getLines()
-      .filter(_.contains("="))
-      .map(line => {
-        val split = line.split('=')
-        (split(0), split.lift(1).getOrElse(""))
-      })
-      .toMap
-
+    val config = Util.parseInstanceConfig(instConfig)
     val preLaunch = config("PreLaunchCommand")
 
     val preLaunchParts = Util.parseCommandLine(preLaunch)
@@ -80,11 +68,11 @@ object PackUpdate {
 
         packupdateDir.mkdirs()
 
-        val (fileName, idx) = preLaunchParts.zipWithIndex.find(_._1.endsWith(".jar")).get
+        val (_, idx) = preLaunchParts.zipWithIndex.find(_._1.endsWith(".jar")).get
 
         val updaterUpdaterJar = new File(packupdateDir, "UpdaterUpdater.jar")
 
-        FileManager.writeStreamToFile(FileManager.retrieveUrl(new URL(path), log), updaterUpdaterJar)
+        FileManager.writeStreamToFile(FileManager.retrieveUrl(path.toURL, log)._1, updaterUpdaterJar)
 
         preLaunchParts(idx) = "$INST_MC_DIR/packupdate/UpdaterUpdater.jar"
 

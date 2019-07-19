@@ -36,6 +36,29 @@ trait UiCallbacks extends Log {
   def statusUpdate(status: String)
 
   /**
+    * Is the secondary progress bar shown
+    * @return true if the progress bar is shown
+    */
+  def subProgressBar: Boolean
+
+  /**
+    * Show a secondary progress indicator to the user
+    */
+  def subProgressBar_=(value: Boolean)
+
+  def subProgressUpdate(numProcessed: Int, numTotal: Int)
+
+  def subUnit: ProgressUnit
+
+  def subUnit_=(unit: ProgressUnit)
+
+  /**
+    * Update the status message
+    * @param status The status message to show
+    */
+  def subStatusUpdate(status: Option[String])
+
+  /**
     * Called when a file conflict occurs
     * @param fileName the conflicting file
     * @param remain the remaining amount of conflicts
