@@ -4,7 +4,7 @@ import java.net.URI
 
 // https://launchermeta.mojang.com/mc/game/version_manifest.json
 case class VanillaVersionSpec(
-                             versions: VanillaVersion
+                             versions: Array[VanillaVersion]
                              )
 
 case class VanillaVersion(

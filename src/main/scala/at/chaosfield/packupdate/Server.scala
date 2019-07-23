@@ -86,7 +86,9 @@ object Server {
 
       data.append(currentStatus)
 
-      if (subProgressShown || currentSubStatus.isDefined)
+      if (subProgressShown || currentSubStatus.isDefined) {
+        data.append(": ")
+      }
 
       if (subProgressShown) {
         data.append(" [")

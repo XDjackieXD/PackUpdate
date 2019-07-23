@@ -95,10 +95,11 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
-    val options = createParser().parseArgs(args)
-    options.getString("COMMAND") match {
-      case "server" => mainServer(options)
-      case "client" => mainClient(options)
+    if (args.contains("--server")) {
+      val serverArgs = args.filterNot(_ == "--server")
+      Server.main(serverArgs)
+    } else {
+      Client.main(args)
     }
   }
 }

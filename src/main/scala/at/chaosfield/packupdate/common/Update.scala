@@ -1,9 +1,9 @@
 package at.chaosfield.packupdate.common
 
 import java.io.{File, FileInputStream, FileNotFoundException, IOException}
-import java.net.URI
+import java.net.{URI, URL}
 
-import at.chaosfield.packupdate.json.{ForgeInstallSpec, InstalledComponent, InstalledFile, LibraryInformation, serializer}
+import at.chaosfield.packupdate.json.{ForgeInstallSpec, InstalledComponent, InstalledFile, LibraryInformation, VanillaVersionManifest, VanillaVersionSpec, serializer}
 import org.apache.commons.io.FileUtils
 import org.json4s.jackson.JsonMethods
 
@@ -61,6 +61,7 @@ object Update {
             Util.absoluteToRelativePath(file, config.minecraftDir),
             component.hash.getOrElse(FileHash.forFile(file))
           ))
+
         case ComponentType.Config =>
           val file = File.createTempFile("packupdate", component.name + component.version)
           val configDir = new File(config.minecraftDir, "config")
@@ -71,6 +72,7 @@ object Update {
           file.deleteOnExit()
           ui.subStatusUpdate(None)
           files.map(f => InstalledFile(Util.absoluteToRelativePath(f._1, config.minecraftDir), f._2)).toArray
+
         case ComponentType.Resource =>
           val file = File.createTempFile("packupdate", component.name + component.version)
           runDownload(component, file, ui)
@@ -79,6 +81,7 @@ object Update {
           file.deleteOnExit()
           ui.subStatusUpdate(None)
           files.map(f => InstalledFile(Util.absoluteToRelativePath(f._1, config.minecraftDir), f._2)).toArray
+
         case ComponentType.Forge =>
           config.packSide match {
             case PackSide.Server =>
@@ -137,13 +140,10 @@ object Update {
                   val libQueue = mutable.Queue(mcLib.name)
                   while (libQueue.nonEmpty) {
                     val lib = libQueue.dequeue()
-                    println(s"Processing ${lib.getMavenPath}...")
                     libs += lib
                     try {
                       val pom = mcLib.getPom(lib, ui)
-                      println("Pom: " + pom.toString)
                       getDependencies(pom).filterNot(libs.contains).foreach(dep => {
-                        println(s"  -> Dependency ${dep.getMavenPath}")
                         libQueue.enqueue(dep)
                         mcLib.url match {
                           case Some(url) => repoMap(lib) = url
@@ -152,16 +152,16 @@ object Update {
                       })
                     } catch {
                       case e: FileNotFoundException =>
-                        e.printStackTrace()
+                        ui.error(s"Could not download POM for ${lib.getMavenPath}: File ${e.getMessage} not found")
                     }
                   }
                 })
 
               val len = libs.size
-              ui.progressUpdate(0, len)
+              ui.subUnit = ProgressUnit.Bytes
               ui.subProgressBar = true
 
-              val ret = libs
+              val libFiles = libs
                 .toArray
                 .zipWithIndex
                 .flatMap{case (library, idx) => {
@@ -173,23 +173,51 @@ object Update {
 
                   try {
                     library.downloadTo(repo, dest, ui, progressCallback = {
-                      case (num, Some(max)) => {
+                      case (num, Some(max)) =>
                         ui.subProgressUpdate(num, max)
-                      }
                       case _ =>
                     })
 
                     Some(InstalledFile(Util.absoluteToRelativePath(dest, config.minecraftDir), FileHash.forFile(dest)))
                   } catch {
                     case e: FileNotFoundException =>
-                      println(s"Could not download ${library.getMavenPath} from List(${repo.mkString(", ")}):")
-                      e.printStackTrace()
+                      ui.error(s"Could not download ${library.getMavenPath} from List(${repo.mkString(", ")}): ${e.getClass.getName}: ${e.getMessage}")
                       None
                   }
                 }}
 
               ui.subProgressBar = false
-              ret
+              ui.subStatusUpdate(Some("Downloading server binary"))
+
+              val launcherData = JsonMethods.parse(FileManager.retrieveUrl(new URL("https://launchermeta.mojang.com/mc/game/version_manifest.json"), ui)._1)
+              val launcherInfo = launcherData.extract[VanillaVersionSpec](serializer.formats, manifest[VanillaVersionSpec])
+
+              val mcVersion = forgeData.versionInfo.inheritsFrom
+
+              val manifestUrl = launcherInfo
+                .versions
+                .find(_.id == mcVersion)
+                .getOrElse(throw new RuntimeException(s"Could not find minecraft version $mcVersion"))
+                .url
+
+              val versionData = JsonMethods.parse(FileManager.retrieveUrl(manifestUrl.toURL , ui)._1)
+              val versionInfo = versionData.extract[VanillaVersionManifest](serializer.formats, manifest[VanillaVersionManifest])
+
+              FileManager.downloadWithHash(
+                versionInfo.downloads.server.url.toURL,
+                new File(config.minecraftDir, s"minecraft_server.$mcVersion.jar"),
+                ui,
+                None, // TODO: let FileHash support sha1
+                progressCallback = {
+                  case (num, Some(max)) =>
+                    ui.subProgressUpdate(num, max)
+                  case _ =>
+                }
+              )
+
+              ui.subProgressBar = false
+              ui.subStatusUpdate(None)
+              libFiles
             case PackSide.Client =>
               ui.debug("Installing Forge on client not yet supported")
               Array.empty
