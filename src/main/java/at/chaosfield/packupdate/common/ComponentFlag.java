@@ -26,7 +26,12 @@ public enum ComponentFlag {
      *
      * Normally PackUpdate will error if a file not maintained by PackUpdate would be overwritten. Setting this option will silently overwrite
      * any files. For config files this additionally means that any user changes to the config get overwritten each update
+     *
+     * It is undefined behaviour to set both this option and no_integrity (current implementation will ignore this option
+     * in that case)
      */
+    // TODO: Implement for extraction
+    // TODO: handle properly when upgrading from legacy
     ForceOverwrite("force_overwrite"),
 
     /**
@@ -42,7 +47,17 @@ public enum ComponentFlag {
      *
      * This Option is only really useful in combination with Optional. It makes the mod disabled by default, but possible to enable by the user
      */
-    Disabled("disabled")
+    Disabled("disabled"),
+
+    /**
+     * Disables integrity check for this component.
+     *
+     * PackUpdate will still ensure all files are there, however it will ignore changes until the server updates the component
+     *
+     * It is undefined behaviour to set both this option and force_overwrite (current implementation will ignore this option
+     * in that case)
+     */
+    NoIntegrity("no_integrity")
 
     ;
 

@@ -4,5 +4,10 @@ import org.json4s.{DefaultFormats, Formats}
 
 package object serializer {
   def formats: Formats =
-    DefaultFormats + ComponentFlagSerializer + URISerializer + ComponentTypeSerializer + FileHashSerializer
+    DefaultFormats +
+      ComponentFlagSerializer +
+      URISerializer +
+      ComponentTypeSerializer +
+      FileHashSerializer +
+      MavenPathSerializer
 }

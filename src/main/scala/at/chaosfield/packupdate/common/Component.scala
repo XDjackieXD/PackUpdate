@@ -2,7 +2,7 @@ package at.chaosfield.packupdate.common
 
 import java.net.URI
 
-class Component(val name: String, val version: String, val downloadUrl: Option[URI], val componentType: ComponentType, val hash: Option[FileHash], val flags: Array[ComponentFlag]) {
+class Component(val name: String, val version: String, val _downloadUrl: Option[URI], val componentType: ComponentType, val hash: Option[FileHash], val flags: Array[ComponentFlag]) {
   def toCSV = {
     Array(
       name,
@@ -21,7 +21,18 @@ class Component(val name: String, val version: String, val downloadUrl: Option[U
     }
   }
 
+  def downloadUrl: Option[URI] = if (componentType == ComponentType.Forge) {
+    _downloadUrl match {
+      case Some(uri: URI) => Some(uri)
+      case None => Some(new URI(s"https://files.minecraftforge.net/maven/net/minecraftforge/forge/$version/forge-$version-installer.jar"))
+    }
+  } else {
+    _downloadUrl
+  }
+
   def display = s"$name $version"
+
+  def hasFlag(flag: ComponentFlag): Boolean = flags.contains(flag)
 }
 
 object Component {

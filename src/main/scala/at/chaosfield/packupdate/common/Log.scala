@@ -2,6 +2,7 @@ package at.chaosfield.packupdate.common
 
 trait Log {
   def log(logLevel: LogLevel, message: String)
+  def trace(message: String) = log(LogLevel.Trace, message)
   def debug(message: String) = log(LogLevel.Debug, message)
   def info(message: String) = log(LogLevel.Info, message)
   def warning(message: String) = log(LogLevel.Warning, message)

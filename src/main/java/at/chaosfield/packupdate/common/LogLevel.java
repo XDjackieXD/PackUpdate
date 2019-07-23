@@ -4,7 +4,8 @@ public enum LogLevel {
     Debug("DEBG"),
     Info("INFO"),
     Warning("WARN"),
-    Error("ERR");
+    Error("ERR"),
+    Trace("TRCE");
 
     String name;
 

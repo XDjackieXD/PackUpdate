@@ -28,24 +28,27 @@ import java.net.URL
 import java.util
 import java.util.zip.{ZipEntry, ZipFile, ZipInputStream}
 
-import at.chaosfield.packupdate.common.Forge.ForgeInfo
-import com.google.gson.Gson
+import at.chaosfield.packupdate.json.{ForgeInstallSpec, serializer}
+
 import org.apache.commons.io.input.ReaderInputStream
 
 import scala.collection.JavaConverters._
+import org.json4s._
+import org.json4s.jackson.{JsonMethods, Serialization}
 
-class Forge(info: ForgeInfo) {
+class Forge(info: ForgeInstallSpec) {
   def libraries: Array[(URL, String)] = {
-    info.versionInfo.libraries.filter(_.artifact != "forge").map(lib => {
+    ???
+    /*info.versionInfo.libraries.filter(_.artifact != "forge").map(lib => {
       (new URL(lib.toURL), lib.filepath)
-    })
+    })*/
   }
 
   def mainDownload: (URL, String) = {
     (new URL(s"https://files.minecraftforge.net/maven/net/minecraftforge/forge/$version/forge-$version-universal.jar"), "forge-$version-universal.jar")
   }
 
-  def version = info.install.version.split(" ")(1)
+  def version: String = info.install.version.split(" ")(1)
 
   def everything: Array[(URL, String)] = {
     libraries.map(lib => (lib._1, "libraries/" + lib._2)) ++ Array(mainDownload)
@@ -54,8 +57,8 @@ class Forge(info: ForgeInfo) {
 
 object Forge {
 
-  def fromVersion(version: String) = {
-    val stream = new URL(s"https://files.minecraftforge.net/maven/net/minecraftforge/forge/$version/forge-$version-installer.jar").openStream()
+  /*def fromVersion(version: String): Forge = {
+    val stream =
     val zip = new ZipInputStream(stream)
     var entry: ZipEntry = null
     do {
@@ -73,40 +76,10 @@ object Forge {
     } while (off < size)
 
     fromJSON(new String(data))
-  }
+  }*/
 
-  def fromJSON(str: String) = {
-    val gson = new Gson()
-    new Forge(gson.fromJson(str, classOf[ForgeInfo]))
-  }
-
-  class ForgeInfo {
-    var versionInfo: VersionInfo = _
-    var install: InstallInfo = _
-  }
-
-  class InstallInfo {
-    var filePath: String = _
-    var version: String = _
-  }
-
-  class VersionInfo {
-    var id: String = _
-    var libraries: Array[LibraryInfo] = _
-  }
-
-  class LibraryInfo {
-    var name: String = _
-    var url: String = _
-    var serverreq: String = _
-    var clientreq: String = _
-
-    def group = parts(0)
-    def artifact = parts(1)
-    def version = parts(2)
-    private def parts = name.split(":")
-
-    def filepath = s"${group.replace('.', '/')}/$artifact/$version/$artifact-$version.jar"
-    def toURL = s"${Option(url).getOrElse("https://libraries.minecraft.net/")}$filepath"
+  def fromJSON(str: String): Forge = {
+    val data = JsonMethods.parse(str)
+    new Forge(data.extract[ForgeInstallSpec](serializer.formats, manifest[ForgeInstallSpec]))
   }
 }

@@ -36,7 +36,7 @@ object FileManager {
         case Some(remote_version) => if (remote_version.version != component.version) {
           Some(Update.UpdatedComponent(component, remote_version))
         } else {
-          if (component.validateIntegrity(config)) {
+          if (component.validateIntegrity(config, ui)) {
             None
           } else {
             Some(Update.InvalidComponent(component))
@@ -139,7 +139,8 @@ object FileManager {
     * @param dest the directory to extract to
     * @return A map with the key being the file and the value being the corresponding sha256 sum
     */
-  def extractZip(zipFile: File, dest: File, log: Log): Map[File, FileHash] = {
+  def extractZip(zipFile: File, dest: File, overwrite: Boolean, log: Log): Map[File, FileHash] = {
+    // TODO: Actually do overwrite checking
     dest.mkdirs()
     val zipStream = new ZipInputStream(new FileInputStream(zipFile))
 
@@ -156,7 +157,7 @@ object FileManager {
         } else {
           log.debug(s"Extracting $file")
           val stream = new DigestInputStream(zipStream, MessageDigest.getInstance("SHA-256"))
-          FileManager.writeStreamToFile(zipStream, file)
+          FileManager.writeStreamToFile(stream, file)
           ret(file) = new FileHash(stream.getMessageDigest.digest)
         }
       } else {
@@ -177,6 +178,13 @@ object FileManager {
 
   def readFileToString(file: File): String = {
     val s = Source.fromFile(file, "UTF-8")
+    val str = s.mkString
+    s.close()
+    str
+  }
+
+  def readStreamToString(stream: InputStream): String = {
+    val s = Source.fromInputStream(stream)
     val str = s.mkString
     s.close()
     str

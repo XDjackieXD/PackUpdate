@@ -54,6 +54,9 @@ object FxController {
     override protected def call(): List[String] = {
 
       val errorLog = ArrayBuffer.empty[String]
+      var subStatusMessage: Option[String] = None
+      var subProgressInternal = (0, 0)
+      var subProgressUnit = ProgressUnit.Scalar
 
       object GuiFeedback extends UiCallbacks {
 
@@ -130,11 +133,16 @@ object FxController {
 
         override def subProgressUpdate(numProcessed: Int, numTotal: Int): Unit = {
           subProgressValue.set(numProcessed.toFloat / numTotal.toFloat)
+          subProgressInternal = (numProcessed, numTotal)
+          updateSubStatus()
         }
 
-        override def subUnit: ProgressUnit = ProgressUnit.Scalar
+        override def subUnit: ProgressUnit = subProgressUnit
 
-        override def subUnit_=(unit: ProgressUnit): Unit = ()
+        override def subUnit_=(unit: ProgressUnit): Unit = {
+          subProgressUnit = unit
+          updateSubStatus()
+        }
 
         /**
           * Update the status message
@@ -142,8 +150,30 @@ object FxController {
           * @param status The status message to show
           */
         override def subStatusUpdate(status: Option[String]): Unit = {
+          subStatusMessage = status
+          updateSubStatus()
+        }
+
+        def updateSubStatus(): Unit = {
+          val status = new StringBuilder
+
+          subStatusMessage match {
+            case Some(s) => status.append(s)
+            case None =>
+          }
+
+          if (subProgressBarShown.get) {
+            status.append(" (")
+            status.append(subProgressUnit.render(subProgressInternal._1))
+            if (subProgressUnit != ProgressUnit.Percent) {
+              status.append("/")
+              status.append(subProgressUnit.render(subProgressInternal._2))
+            }
+            status.append(")")
+          }
+
           Platform.runLater(() => {
-            subStatusValue.set(status.getOrElse(""))
+            subStatusValue.set(status.toString.trim)
           })
         }
       }

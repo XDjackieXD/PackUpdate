@@ -16,6 +16,7 @@ object Util {
 
   /**
     * Get the file where a [[Component]] should be put. This is only valid for single-file components
+    *
     * @param component The [[Component]] to the file for
     * @param minecraftDir the directory minecraft is installed in
     * @param disabled `true`, if the path for the disabled version of this component should be used
@@ -24,7 +25,7 @@ object Util {
   def fileForComponent(component: Component, minecraftDir: File, disabled: Boolean = false): File = {
     component.componentType match {
       case ComponentType.Mod =>
-        val fileNamePre = s"${component.name} - ${component.version}.jar" + (if (disabled) { ".disabled" } else { "" })
+        val fileNamePre = s"${component.name}-${component.version}.jar" + (if (disabled) { ".disabled" } else { "" })
         new File(minecraftDir, "mods/" + fileNamePre.replaceAll("[^a-zA-Z0-9_\\.\\- ]", "_"))
       case ComponentType.Forge =>
         new File(minecraftDir, s"forge-${component.version}.jar")
