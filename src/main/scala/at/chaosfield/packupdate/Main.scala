@@ -30,24 +30,17 @@ object Main {
   }
 
   def createServerParser(parser: Subparser) = {
-
-    parser
-      .addArgument("--init")
-      .dest("init")
-      .action(Arguments.storeConst())
-      .help(s"Initialize the directory for use with ${Main.ProjectName}")
-
-    parser
-        .addArgument("--update")
-        .dest("update")
-        .action(Arguments.storeTrue())
-        .help("Updates the Server")
-
     parser
       .addArgument("--run")
       .dest("run")
       .action(Arguments.storeTrue())
       .help("Run the Server in foreground. Implies --update")
+
+    parser
+      .addArgument("--accept-mojang-eula")
+      .dest("eula")
+      .action(Arguments.storeTrue())
+      .help("By specifying this option you indicate that you accept the Mojang EULA located at https://account.mojang.com/documents/minecraft_eula")
   }
 
   def createClientParser(parser: Subparser) = {
