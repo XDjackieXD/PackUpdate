@@ -13,5 +13,4 @@ libraryDependencies += "net.sourceforge.argparse4j" % "argparse4j" % "0.8.1"
 libraryDependencies += "org.json4s" % "json4s-jackson_2.12" % "3.6.7"
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
 
-//lazy val updaterUpdater = (project in file("UpdaterUpdater"))
 Compile / mainClass := Some("at.chaosfield.packupdate.Main")
