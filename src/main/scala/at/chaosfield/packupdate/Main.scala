@@ -5,6 +5,7 @@ import java.net.URL
 import java.util.jar.Manifest
 
 import at.chaosfield.packupdate.common.{MainConfig, MainLogic, PackSide, Util}
+import at.chaosfield.packupdate.generator.PackGenerator
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
@@ -130,7 +131,7 @@ object Main {
   }
 
   def mainGenerate(namespace: Namespace): Unit = {
-    ???
+    PackGenerator.run(null, null)
   }
 
   def main(args: Array[String]): Unit = {

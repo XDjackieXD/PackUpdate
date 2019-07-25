@@ -196,6 +196,10 @@ object Util {
     ret
   }
 
+  def unparseInstanceConfig(config: Map[String, String]): String = {
+    config.map(s => s"${s._1}=${s._2}").mkString("\n")
+  }
+
   /**
     * Turns an absolute file path into a relative one
     * @param path The input [[File]]

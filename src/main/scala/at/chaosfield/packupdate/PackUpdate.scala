@@ -76,14 +76,12 @@ object PackUpdate {
 
         preLaunchParts(idx) = "$INST_MC_DIR/packupdate/UpdaterUpdater.jar"
 
-        val finalConfig =
-          (config + ("PreLaunchCommand" -> Util.unparseCommandLine(preLaunchParts.init)))
-            .map(s => s"${s._1}=${s._2}").mkString("\n")
+        val finalConfig = config + ("PreLaunchCommand" -> Util.unparseCommandLine(preLaunchParts.init))
 
         //println(finalConfig)
 
         // Update MultiMC Config
-        FileManager.writeStringToFile(instConfig, finalConfig)
+        FileManager.writeStringToFile(instConfig, Util.unparseInstanceConfig(finalConfig))
 
         JOptionPane.showMessageDialog(null, "Hi there! I just updated UpdaterUpdater to a new version. This new version will be used upon next launch of this instance. Please reload and restart the MultiMC instance to continue")
 

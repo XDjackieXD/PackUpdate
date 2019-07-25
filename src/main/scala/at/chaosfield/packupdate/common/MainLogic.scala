@@ -97,9 +97,9 @@ class MainLogic(ui: UiCallbacks) {
       ui.statusUpdate("Writing local metadata")
 
       // Ensure that untouched components will be preserved in the local state
-      val finalComponents = (localData
+      val finalComponents = localData
           .installedComponents
-          .filter(c => !updates.exists(u => u.newOrOld.name == c.name))) ++ components.flatten
+          .filter(c => !updates.exists(u => u.newOrOld.name == c.name)) ++ components.flatten
       val updatedLocalData = LocalDatabase(finalComponents)
 
       FileManager.writeStringToFile(localFile, Serialization.write(updatedLocalData)(serializer.formats))
