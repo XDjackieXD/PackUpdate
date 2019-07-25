@@ -176,6 +176,13 @@ object FxController {
             subStatusValue.set(status.toString.trim)
           })
         }
+
+        /**
+          * Print a summary of the transaction that is about to be performed
+          *
+          * @param summary
+          */
+        override def printTransactionSummary(summary: List[(String, List[Update])]): Unit = Unit
       }
       new MainLogic(GuiFeedback).runUpdate(main.config)
       errorLog.toList

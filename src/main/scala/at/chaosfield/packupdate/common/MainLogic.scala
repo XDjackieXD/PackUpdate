@@ -51,6 +51,19 @@ class MainLogic(ui: UiCallbacks) {
       ui.statusUpdate("Calculating changes and checking integrity...")
       val updates = FileManager.getUpdates(localData.installedComponents, remoteData, config, ui)
 
+      val types = List(
+        "Newly Installed" -> classOf[Update.NewComponent],
+        "Updated" -> classOf[Update.UpdatedComponent],
+        "Removed" -> classOf[Update.RemovedComponent],
+        "Corrupt" -> classOf[Update.InvalidComponent]
+      )
+
+      val summary = types.map{case (label, klass) => {
+        (label, updates.filter(_.getClass == klass))
+      }}
+
+      ui.printTransactionSummary(summary)
+
       new File(config.minecraftDir, "mods").mkdirs()
 
       ui.progressBar = true
@@ -64,9 +77,9 @@ class MainLogic(ui: UiCallbacks) {
         ui.statusUpdate(s"$verb ${update.name}")
         ui.progressUpdate(idx, updates.length)
         try {
+          val files = update.execute(config, ui)
           update.newVersion match {
             case Some(newComp) =>
-              val files = update.execute(config, ui)
               Some(InstalledComponent.fromRemote(newComp, files))
             case None =>
               // The component has been fully removed and therefore should no longer be tracked locally

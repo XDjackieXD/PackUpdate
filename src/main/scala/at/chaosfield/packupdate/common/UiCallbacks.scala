@@ -64,4 +64,10 @@ trait UiCallbacks extends Log {
     * @param remain the remaining amount of conflicts
     */
   def askConflict(fileName: String, remain: Int): ConflictResolution
+
+  /**
+    * Print a summary of the transaction that is about to be performed
+    * @param summary
+    */
+  def printTransactionSummary(summary: List[(String, List[Update])]): Unit
 }

@@ -3,7 +3,7 @@ package at.chaosfield.packupdate
 import java.io.File
 import java.net.URL
 
-import at.chaosfield.packupdate.common.{ConflictResolution, LogLevel, MainConfig, MainLogic, PackSide, ProgressUnit, UiCallbacks, Util}
+import at.chaosfield.packupdate.common.{ConflictResolution, LogLevel, MainConfig, MainLogic, PackSide, ProgressUnit, UiCallbacks, Update, Util}
 import at.chaosfield.packupdate.server.Launcher
 import org.jline.terminal.TerminalBuilder
 
@@ -91,18 +91,19 @@ object Server {
       }
 
       if (subProgressShown) {
-        data.append(" [")
+        data.append("[")
         data.append(subProgressUnit.render(currentSubProgress))
         if (subProgressUnit != ProgressUnit.Percent) {
           data.append("/")
           data.append(subProgressUnit.render(currentSubTotal))
         }
-        data.append("]")
+        if (currentSubStatus.isDefined) {
+          data.append("] ")
+        }
       }
 
       currentSubStatus match {
         case Some(status) =>
-          data.append(" ")
           data.append(status)
         case None =>
       }
@@ -165,6 +166,20 @@ object Server {
 
     override def subUnit_=(unit: ProgressUnit): Unit = {
       subProgressUnit = unit
+      redraw()
+    }
+
+    /**
+      * Print a summary of the transaction that is about to be performed
+      *
+      * @param summary
+      */
+    override def printTransactionSummary(summary: List[(String, List[Update])]): Unit = {
+      summary.foreach{case (name, updates) => {
+        if (updates.nonEmpty) {
+          println(s"$name: ${updates.map(_.name).mkString(", ")}")
+        }
+      }}
       redraw()
     }
   }

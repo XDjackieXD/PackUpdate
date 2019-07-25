@@ -95,7 +95,8 @@ object Update {
               val data = JsonMethods.parse(new FileInputStream(new File(dir, "install_profile.json")))
               val forgeData = data.extract[ForgeInstallSpec](serializer.formats, manifest[ForgeInstallSpec])
               ui.subStatusUpdate(Some("Installing main forge jar..."))
-              FileUtils.copyFile(new File(dir, forgeData.install.filePath), new File(forgeData.install.filePath))
+              val forgeFile = new File(config.minecraftDir, forgeData.install.filePath)
+              FileUtils.copyFile(new File(dir, forgeData.install.filePath), forgeFile)
               ui.subStatusUpdate(Some("Calculating dependencies..."))
 
               val libDir = new File(config.minecraftDir, "libraries")
@@ -203,9 +204,11 @@ object Update {
               val versionData = JsonMethods.parse(FileManager.retrieveUrl(manifestUrl.toURL , ui)._1)
               val versionInfo = versionData.extract[VanillaVersionManifest](serializer.formats, manifest[VanillaVersionManifest])
 
+              val mcServerFile = new File(config.minecraftDir, s"minecraft_server.$mcVersion.jar")
+
               FileManager.downloadWithHash(
                 versionInfo.downloads.server.url.toURL,
-                new File(config.minecraftDir, s"minecraft_server.$mcVersion.jar"),
+                mcServerFile,
                 ui,
                 None, // TODO: let FileHash support sha1
                 progressCallback = {
@@ -215,9 +218,14 @@ object Update {
                 }
               )
 
+              val addFiles = List(forgeFile, mcServerFile)
+                .map(file =>
+                  InstalledFile(Util.absoluteToRelativePath(file, config.minecraftDir), FileHash.forFile(file))
+                )
+
               ui.subProgressBar = false
               ui.subStatusUpdate(None)
-              libFiles
+              libFiles ++ addFiles
             case PackSide.Client =>
               ui.debug("Installing Forge on client not yet supported")
               Array.empty
@@ -260,7 +268,10 @@ object Update {
 
     override def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile] = {
       ui.debug(s"RemovedComponent(${component.display}).execute()")
-      component.files.foreach(file => new File(config.minecraftDir, file.fileName).delete())
+      component.files.foreach(file => {
+        ui.trace(s"Deleting file ${file.fileName}")
+        new File(config.minecraftDir, file.fileName).delete()
+      })
       Array.empty
     }
   }
