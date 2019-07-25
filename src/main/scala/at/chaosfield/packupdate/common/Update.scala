@@ -253,7 +253,7 @@ object Update {
       ui.debug(s"NewComponent(${oldComponent.display}, ${newComponent.display}).execute()")
       // TODO: Adopt Disabled Logic to new state keeping
       val disabled = if (newComponent.flags.contains(ComponentFlag.Optional)) {
-        oldComponent.componentType == ComponentType.Mod && Util.fileForComponent(oldComponent.toComponent, config.minecraftDir, disabled = true).exists()
+        oldComponent.componentType == ComponentType.Mod && oldComponent.files.head.fileName != oldComponent.files.head.enabledFile()
       } else {
         newComponent.flags.contains(ComponentFlag.Disabled)
       }
