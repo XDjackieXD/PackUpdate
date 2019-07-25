@@ -4,8 +4,6 @@ version := "3.0-rc7"
 
 scalaVersion := "2.12.8"
 
-//libraryDependencies += "org.openjfx" % "javafx-controls" % "11"
-//libraryDependencies += "org.openjfx" % "javafx-fxml" % "11"
 libraryDependencies += "commons-io" % "commons-io" % "2.6"
 libraryDependencies += "commons-codec" % "commons-codec" % "1.12"
 libraryDependencies += "org.jline" % "jline" % "3.11.0"

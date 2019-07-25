@@ -169,30 +169,28 @@ object Server {
     }
   }
 
-  def run(config: MainConfig): Option[File] = {
+  def run(config: MainConfig): Unit = {
     val logic = new MainLogic(CliCallbacks)
 
     logic.runUpdate(config)
 
-    MainLogic.getRunnableJar(config.minecraftDir)
+    /*
+    println("Launching Server...")
+    MainLogic.getRunnableJar(config.minecraftDir) match {
+      case Some(jar) => Launcher.launchServer(jar, args.tail)
+      case None => println("No runnable jar found, not launching server")
+    }
+    */
   }
 
   def main(args: Array[String]): Unit = {
     if (args.length < 1) {
       println("Usage: packupdate-server.jar <url>")
+      return
     }
 
-    val config = new MainConfig(new File("."), new URL(args(0)), PackSide.Server)
-    val runnableJar = run(config)
-
-    if (args.length > 1) {
-      println("Launching Server...")
-      runnableJar match {
-        case Some(jar) => Launcher.launchServer(jar, args.tail)
-        case None => println("No runnable jar found, not launching server")
-      }
-    }
-
-
+    val config = MainConfig(new File("."), new URL(args(0)), PackSide.Server)
+    run(config)
   }
+
 }

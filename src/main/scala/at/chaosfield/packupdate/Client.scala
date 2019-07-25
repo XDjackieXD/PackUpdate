@@ -15,7 +15,14 @@ object Client {
 
   def run(options: MainConfig): Unit = {
     this.options = options
-    Application.launch(classOf[PackUpdate])
+    try {
+      Application.launch(classOf[PackUpdate])
+    } catch {
+      case e: NoClassDefFoundError if e.getMessage == "javafx/application/Application" =>
+        System.err.println("Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
+        JOptionPane.showMessageDialog(null, "Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
+        Util.exit(1)
+    }
   }
 
   def main(args: Array[String]): Unit = {
@@ -38,13 +45,7 @@ object Client {
         Util.exit(1)
     }
 
-    try {
-      run(MainConfig(new File(mcDir), new URL(args(0)), PackSide.Client))
-    } catch {
-      case e: NoClassDefFoundError if e.getMessage == "javafx/application/Application" =>
-        System.err.println("Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
-        JOptionPane.showMessageDialog(null, "Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
-        Util.exit(1)
-    }
+    run(MainConfig(new File(mcDir), new URL(args(0)), PackSide.Client))
+
   }
 }
