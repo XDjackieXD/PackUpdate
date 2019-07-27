@@ -8,7 +8,6 @@ import org.apache.commons.io.FileUtils
 import org.json4s.jackson.JsonMethods
 
 import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.xml.Elem
 
 sealed abstract class Update {
@@ -251,7 +250,6 @@ object Update {
 
     override def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile] = {
       ui.debug(s"NewComponent(${oldComponent.display}, ${newComponent.display}).execute()")
-      // TODO: Adopt Disabled Logic to new state keeping
       val disabled = if (newComponent.flags.contains(ComponentFlag.Optional)) {
         oldComponent.componentType == ComponentType.Mod && oldComponent.files.head.fileName != oldComponent.files.head.enabledFile()
       } else {

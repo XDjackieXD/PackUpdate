@@ -4,8 +4,9 @@ import java.io.File
 import java.net.URL
 import java.util.jar.Manifest
 
-import at.chaosfield.packupdate.common.{MainConfig, MainLogic, PackSide, Util}
+import at.chaosfield.packupdate.common.{CliCallbacks, MainConfig, MainLogic, PackSide, Util}
 import at.chaosfield.packupdate.generator.PackGenerator
+import com.sun.xml.internal.ws.api.policy.PolicyResolver.ClientContext
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
@@ -17,6 +18,9 @@ import scala.collection.JavaConverters._
 object Main {
 
   val ProjectName = "PackUpdate"
+  val UpdaterUpdaterReleasesURL = new URL("https://api.github.com/repos/XDjackieXD/PackUpdateUpdater/releases")
+  val MultiMCMetadataLWJGL = new URL("https://v1.meta.multimc.org/org.lwjgl/")
+  val PackUpdateReleaseUrl = new URL("https://api.github.com/repos/XDjackieXD/PackUpdate/releases")
 
   lazy val Version: String = Manifest
     .map(_.getMainAttributes.getValue("Implementation-Version"))
@@ -46,14 +50,12 @@ object Main {
 
     parser.addArgument("url")
       .dest("url")
-      .`type`(classOf[URL])
       .help("The URL of the pack")
   }
 
   def createClientParser(parser: Subparser): Unit = {
     parser.addArgument("url")
       .dest("url")
-      .`type`(classOf[URL])
       .help("The URL of the pack")
   }
 
@@ -61,30 +63,38 @@ object Main {
     parser.addArgument("--pack-url")
       .dest("url")
       .required(true)
-      .nargs(1)
-      .`type`(classOf[URL])
       .help("The URL where the pack csv is located at")
 
     parser.addArgument("--out")
       .dest("out")
       .required(true)
       .help("The output zip file")
-      .nargs(1)
 
     parser.addArgument("--java-xms")
       .dest("xms")
       .help("The JVM Minimum Memory value")
-      .nargs(1)
 
     parser.addArgument("--java-xmx")
       .dest("xmx")
       .help("The JVM Maximum Memory value")
-      .nargs(1)
 
-    parser.addArgument("--forge-version")
+    // TODO: Allow manually specifying forge and mc version
+    /*parser.addArgument("--forge-version")
       .dest("forge")
-      .help("The version of Forge to use")
-      .nargs(1)
+      .help("The version of Forge to use")*/
+
+    parser.addArgument("--beta")
+      .dest("beta")
+      .action(Arguments.storeTrue())
+      .help("Enable Beta versions of PackUpdate")
+
+    parser.addArgument("--update-check-url")
+      .dest("update-url")
+      .help("URL to check updates against")
+
+    parser.addArgument("--icon-key")
+      .dest("icon-key")
+      .help("The icon of the instance")
   }
 
   def createParser(): ArgumentParser = {
@@ -131,7 +141,16 @@ object Main {
   }
 
   def mainGenerate(namespace: Namespace): Unit = {
-    PackGenerator.run(null, null)
+    PackGenerator.run(
+      new URL(namespace.getString("url")),
+      new File(namespace.getString("out")),
+      CliCallbacks,
+      Option(namespace.getString("xms").toInt),
+      Option(namespace.getString("xmx").toInt),
+      namespace.getBoolean("beta"),
+      new URL(Option(namespace.getString("update-url")).getOrElse(Main.PackUpdateReleaseUrl.toString)),
+      Option(namespace.getString("icon-key"))
+    )
   }
 
   def main(args: Array[String]): Unit = {

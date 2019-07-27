@@ -31,15 +31,7 @@ case class GithubUser(
                       gravatarId: String,
                       url: URI,
                       htmlUrl: URI,
-                      followersUrl: URI,
-                      followingUrl: URI,
-                      gistsUrl: URI,
-                      starredUrl: URI,
-                      subscriptionsUrl: URI,
-                      organizationsUrl: URI,
                       reposUrl: URI,
-                      eventsUrl: URI,
-                      receivedEventsUrl: URI,
                       `type`: String,
                       siteAdmin: Boolean
                      )

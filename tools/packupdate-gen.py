@@ -23,7 +23,7 @@ def guess_mod_name(file_name):
     file_name, _ = os.path.splitext(file_name)
     parts = []
     for p in file_name.split('-'):
-        if p[0].isdigit():
+        if len(p) > 0 and p[0].isdigit():
             break
         parts.append(p)
     return "-".join(parts)
@@ -105,6 +105,9 @@ with open(out_file, 'w') as out_file:
     if path.isfile('resources.packupdate'):
         with open('resources.packupdate') as file:
             make_resources(file.readlines(), base_url, out_file)
+    if path.isfile('forge.packupdate'):
+        with open('forge.packupdate') as file:
+            out_file.write("Minecraft Forge,{},,forge\n".format(file.read().strip()))
     flags = {}
     if path.isfile('flags.packupdate'):
         with open('flags.packupdate') as file:
