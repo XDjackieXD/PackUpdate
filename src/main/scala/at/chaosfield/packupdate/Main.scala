@@ -4,9 +4,12 @@ import java.io.File
 import java.net.URL
 import java.util.jar.Manifest
 
+import at.chaosfield.packupdate.client.PackUpdate
 import at.chaosfield.packupdate.common.{CliCallbacks, MainConfig, MainLogic, PackSide, Util}
 import at.chaosfield.packupdate.generator.PackGenerator
 import com.sun.xml.internal.ws.api.policy.PolicyResolver.ClientContext
+import javafx.application.Application
+import javax.swing.JOptionPane
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
@@ -21,6 +24,9 @@ object Main {
   val UpdaterUpdaterReleasesURL = new URL("https://api.github.com/repos/XDjackieXD/PackUpdateUpdater/releases")
   val MultiMCMetadataLWJGL = new URL("https://v1.meta.multimc.org/org.lwjgl/")
   val PackUpdateReleaseUrl = new URL("https://api.github.com/repos/XDjackieXD/PackUpdate/releases")
+
+  /// Hack to get this to run on JavaFx 7
+  private[packupdate] var options: MainConfig = null
 
   lazy val Version: String = Manifest
     .map(_.getMainAttributes.getValue("Implementation-Version"))
@@ -51,12 +57,22 @@ object Main {
     parser.addArgument("url")
       .dest("url")
       .help("The URL of the pack")
+
+    parser.addArgument("--frontend-ui")
+      .dest("ui")
+      .choices("jfx", "cli")
+      .help("Change the Frontend in use. Default is cli")
   }
 
   def createClientParser(parser: Subparser): Unit = {
     parser.addArgument("url")
       .dest("url")
       .help("The URL of the pack")
+
+    parser.addArgument("--frontend-ui")
+      .dest("ui")
+      .choices("jfx", "cli")
+      .help("Change the Frontend in use. Default is jfx")
   }
 
   def createGeneratorParser(parser: Subparser): Unit = {
@@ -128,16 +144,22 @@ object Main {
     MainConfig(mcDir, new URL(remoteUrl), side, options.get("accept-eula"))
   }
 
-  def mainClient(namespace: Namespace): Unit = {
-    val config = getConfig(PackSide.Client, namespace)
+  def runCli(config: MainConfig): Unit = {
+    val logic = new MainLogic(CliCallbacks)
 
-    Client.run(config)
+    logic.runUpdate(config)
   }
 
-  def mainServer(namespace: Namespace): Unit = {
-    val config = getConfig(PackSide.Server, namespace)
-
-    Server.run(config)
+  def runJfx(config: MainConfig): Unit = {
+    this.options = config
+    try {
+      Application.launch(classOf[PackUpdate])
+    } catch {
+      case e: NoClassDefFoundError if e.getMessage == "javafx/application/Application" =>
+        System.err.println("Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
+        JOptionPane.showMessageDialog(null, "Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
+        Util.exit(1)
+    }
   }
 
   def mainGenerate(namespace: Namespace): Unit = {
@@ -151,6 +173,23 @@ object Main {
       new URL(Option(namespace.getString("update-url")).getOrElse(Main.PackUpdateReleaseUrl.toString)),
       Option(namespace.getString("icon-key"))
     )
+  }
+
+  def mainClient(namespace: Namespace): Unit = {
+    val config = getConfig(PackSide.Client, namespace)
+    runFrontend(namespace, "jfx", config)
+  }
+
+  def mainServer(namespace: Namespace): Unit = {
+    val config = getConfig(PackSide.Server, namespace)
+    runFrontend(namespace, "cli", config)
+  }
+
+  def runFrontend(namespace: Namespace, defaultUi: String, config: MainConfig): Unit = {
+    Option(namespace.getString("ui")).getOrElse(defaultUi) match {
+      case "jfx" => runJfx(config)
+      case "cli" => runCli(config)
+    }
   }
 
   def main(args: Array[String]): Unit = {

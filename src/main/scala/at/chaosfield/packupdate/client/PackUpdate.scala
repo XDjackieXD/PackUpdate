@@ -3,7 +3,7 @@ package at.chaosfield.packupdate.client
 import java.io.IOException
 import java.util
 
-import at.chaosfield.packupdate.Client
+import at.chaosfield.packupdate.Main
 import at.chaosfield.packupdate.common.MainConfig
 import javafx.application.Application
 import javafx.fxml.FXMLLoader
@@ -16,7 +16,7 @@ import javafx.stage.Stage
 class PackUpdate extends Application {
   protected var primaryStage: Stage = null
   protected var rootLayout: VBox = null
-  private[packupdate] val config = Client.options
+  private[packupdate] val config = Main.options
 
   @throws[Exception]
   override def start(primaryStage: Stage): Unit = {

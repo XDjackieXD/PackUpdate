@@ -1,6 +1,6 @@
 name := "PackUpdate"
 
-version := "3.0-rc7"
+version := "3.0-rc8"
 
 scalaVersion := "2.12.8"
 
