@@ -5,15 +5,14 @@ import java.net.URL
 import java.util.jar.Manifest
 
 import at.chaosfield.packupdate.client.PackUpdate
-import at.chaosfield.packupdate.common.{CliCallbacks, MainConfig, MainLogic, PackSide, Util}
+import at.chaosfield.packupdate.common.{MainConfig, MainLogic, PackSide, Util}
+import at.chaosfield.packupdate.frontend.{CliCallbacks, SwingFrontend}
 import at.chaosfield.packupdate.generator.PackGenerator
-import com.sun.xml.internal.ws.api.policy.PolicyResolver.ClientContext
 import javafx.application.Application
 import javax.swing.JOptionPane
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
-import net.sourceforge.argparse4j.internal.UnrecognizedArgumentException
 
 import scala.collection.JavaConverters._
 
@@ -60,7 +59,7 @@ object Main {
 
     parser.addArgument("--frontend-ui")
       .dest("ui")
-      .choices("jfx", "cli")
+      .choices("jfx", "cli", "swing")
       .help("Change the Frontend in use. Default is cli")
   }
 
@@ -71,7 +70,7 @@ object Main {
 
     parser.addArgument("--frontend-ui")
       .dest("ui")
-      .choices("jfx", "cli")
+      .choices("jfx", "cli", "swing")
       .help("Change the Frontend in use. Default is jfx")
   }
 
@@ -162,6 +161,13 @@ object Main {
     }
   }
 
+  def runSwing(config: MainConfig): Unit = {
+    val logic = new MainLogic(new SwingFrontend)
+
+    logic.runUpdate(config)
+    Util.exit(0) // TODO: Find a solution to this
+  }
+
   def mainGenerate(namespace: Namespace): Unit = {
     PackGenerator.run(
       new URL(namespace.getString("url")),
@@ -189,6 +195,7 @@ object Main {
     Option(namespace.getString("ui")).getOrElse(defaultUi) match {
       case "jfx" => runJfx(config)
       case "cli" => runCli(config)
+      case "swing" => runSwing(config)
     }
   }
 

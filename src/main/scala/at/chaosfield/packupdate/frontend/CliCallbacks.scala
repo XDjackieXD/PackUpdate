@@ -1,5 +1,6 @@
-package at.chaosfield.packupdate.common
+package at.chaosfield.packupdate.frontend
 
+import at.chaosfield.packupdate.common._
 import org.jline.terminal.TerminalBuilder
 
 object CliCallbacks extends UiCallbacks {
