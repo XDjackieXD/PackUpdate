@@ -70,4 +70,9 @@ trait UiCallbacks extends Log {
     * @param summary
     */
   def printTransactionSummary(summary: List[(String, List[Update])]): Unit
+
+  /**
+    * Called before program exits
+    */
+  def finish(): Unit
 }

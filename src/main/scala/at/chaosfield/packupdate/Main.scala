@@ -4,12 +4,9 @@ import java.io.File
 import java.net.URL
 import java.util.jar.Manifest
 
-import at.chaosfield.packupdate.client.PackUpdate
 import at.chaosfield.packupdate.common.{MainConfig, MainLogic, PackSide, Util}
 import at.chaosfield.packupdate.frontend.{CliCallbacks, SwingFrontend}
 import at.chaosfield.packupdate.generator.PackGenerator
-import javafx.application.Application
-import javax.swing.JOptionPane
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
@@ -59,7 +56,7 @@ object Main {
 
     parser.addArgument("--frontend-ui")
       .dest("ui")
-      .choices("jfx", "cli", "swing")
+      .choices("cli", "swing")
       .help("Change the Frontend in use. Default is cli")
   }
 
@@ -70,8 +67,8 @@ object Main {
 
     parser.addArgument("--frontend-ui")
       .dest("ui")
-      .choices("jfx", "cli", "swing")
-      .help("Change the Frontend in use. Default is jfx")
+      .choices("cli", "swing")
+      .help("Change the Frontend in use. Default is swing")
   }
 
   def createGeneratorParser(parser: Subparser): Unit = {
@@ -149,18 +146,6 @@ object Main {
     logic.runUpdate(config)
   }
 
-  def runJfx(config: MainConfig): Unit = {
-    this.options = config
-    try {
-      Application.launch(classOf[PackUpdate])
-    } catch {
-      case e: NoClassDefFoundError if e.getMessage == "javafx/application/Application" =>
-        System.err.println("Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
-        JOptionPane.showMessageDialog(null, "Please install JavaFX. Please note that the version of JavaFX needs to match the version of Java.")
-        Util.exit(1)
-    }
-  }
-
   def runSwing(config: MainConfig): Unit = {
     val logic = new MainLogic(new SwingFrontend)
 
@@ -183,7 +168,7 @@ object Main {
 
   def mainClient(namespace: Namespace): Unit = {
     val config = getConfig(PackSide.Client, namespace)
-    runFrontend(namespace, "jfx", config)
+    runFrontend(namespace, "swing", config)
   }
 
   def mainServer(namespace: Namespace): Unit = {
@@ -193,7 +178,6 @@ object Main {
 
   def runFrontend(namespace: Namespace, defaultUi: String, config: MainConfig): Unit = {
     Option(namespace.getString("ui")).getOrElse(defaultUi) match {
-      case "jfx" => runJfx(config)
       case "cli" => runCli(config)
       case "swing" => runSwing(config)
     }

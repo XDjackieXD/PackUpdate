@@ -4,7 +4,6 @@ import java.io.{File, FileNotFoundException, IOException}
 import java.net.{SocketTimeoutException, URI, URL, UnknownHostException}
 import java.nio.file.Files
 
-import at.chaosfield.packupdate.PackUpdateClassloader
 import at.chaosfield.packupdate.common.error.ChecksumException
 import at.chaosfield.packupdate.json.GithubRelease
 import org.json4s._
@@ -209,33 +208,5 @@ object Util {
     */
   def absoluteToRelativePath(path: File, to: File): String = {
     to.toURI.relativize(path.toURI).getPath
-  }
-
-  def downloadJfx(config: MainConfig, log: Log): Unit = {
-    val jfxClassifier = System.getProperty("os.name") match {
-      case name if name.startsWith("Linux") => "linux"
-      case name if name.startsWith("Mac") => "mac"
-      case name if name.startsWith("Windows") => "win"
-      case _ => throw new Exception("Unknown platform!")
-    }
-
-    val artList = List(
-      ("javafx-base", "11"),
-      ("javafx-controls", "11"),
-      ("javafx-fxml", "11"),
-      ("javafx-graphics", "11")
-    )
-
-    artList
-      .map(info => new MavenPath("org.openjfx", info._1, info._2, Some(jfxClassifier)))
-      .foreach(path => {
-        val dest = new File(config.minecraftDir, s"packupdate/jfx/${path.getFilePath}")
-        if (!dest.exists()) {
-          dest.getParentFile.mkdirs()
-          path.downloadTo(List(new URI("https://repo.maven.apache.org/maven2/")), dest, log)
-        }
-        PackUpdateClassloader.addURL(dest.toURI.toURL)
-      })
-
   }
 }

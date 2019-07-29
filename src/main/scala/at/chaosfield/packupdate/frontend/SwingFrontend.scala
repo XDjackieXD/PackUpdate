@@ -1,11 +1,12 @@
 package at.chaosfield.packupdate.frontend
 
 import java.awt.event.{WindowEvent, WindowListener}
-import java.awt.{Dimension, GridLayout}
+import java.awt.{Dimension, GridLayout, Window}
 
 import at.chaosfield.packupdate.common.{ConflictResolution, LogLevel, ProgressUnit, UiCallbacks, Update, Util}
-import javafx.application.Platform
-import javax.swing.{BoxLayout, JDialog, JFrame, JLabel, JProgressBar, SwingConstants, WindowConstants}
+import javax.swing.{BoxLayout, JDialog, JFrame, JLabel, JOptionPane, JPanel, JProgressBar, JTextArea, SwingConstants, WindowConstants}
+
+import scala.collection.mutable.ArrayBuffer
 
 class SwingFrontend extends UiCallbacks {
   val jframe = new JFrame("PackUpdate - Updating Mods")
@@ -41,12 +42,21 @@ class SwingFrontend extends UiCallbacks {
   private var subProgressUnit = ProgressUnit.Scalar
   private var subProgressValue = (0, 0)
 
+  private val errorList = ArrayBuffer.empty[String]
+
   /**
     *
     * @param message   the message to display
     * @param exception if this is associated with an exception, this exception
     */
-  override def reportError(message: String, exception: Option[Exception]): Unit = ???
+  override def reportError(message: String, exception: Option[Exception]): Unit = {
+    error(message)
+    exception match {
+      case Some(e) => e.printStackTrace()
+      case None =>
+    }
+    errorList += message
+  }
 
   /**
     * Is the progress bar shown
@@ -153,5 +163,20 @@ class SwingFrontend extends UiCallbacks {
     }
 
     status2.setText(status.toString.trim)
+  }
+
+  /**
+    * Called before program exits
+    */
+  override def finish(): Unit = {
+    if (errorList.nonEmpty) {
+      val panel = new JPanel()
+      panel.setLayout(new GridLayout(0, 1))
+      val errorBox = new JTextArea(errorList.mkString("\n"))
+      errorBox.setEditable(false)
+      panel.add(errorBox)
+
+      JOptionPane.showMessageDialog(jframe, panel, "PackUpdate encountered errors during operation", JOptionPane.PLAIN_MESSAGE)
+    }
   }
 }

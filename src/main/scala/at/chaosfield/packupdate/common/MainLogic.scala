@@ -105,6 +105,7 @@ class MainLogic(ui: UiCallbacks) {
       FileManager.writeStringToFile(localFile, Serialization.write(updatedLocalData)(serializer.formats))
 
       ui.statusUpdate("Finished")
+      ui.finish()
     } catch {
       case e: Exception =>
         e.printStackTrace()

@@ -176,4 +176,9 @@ object CliCallbacks extends UiCallbacks {
     }}
     redraw()
   }
+
+  /**
+    * Called before program exits
+    */
+  override def finish(): Unit = ()
 }
