@@ -1,24 +1,22 @@
 package at.chaosfield.packupdate.frontend
 
 import java.awt.event.{WindowEvent, WindowListener}
-import java.awt.{Dimension, GridLayout, Window}
+import java.awt.{Component, Dimension, Frame, Graphics, GridLayout, Window}
 
 import at.chaosfield.packupdate.common.{ConflictResolution, LogLevel, ProgressUnit, UiCallbacks, Update, Util}
-import javax.swing.{BoxLayout, JDialog, JFrame, JLabel, JOptionPane, JPanel, JProgressBar, JTextArea, SwingConstants, WindowConstants}
+import javax.swing.{BoxLayout, Icon, JDialog, JFrame, JLabel, JOptionPane, JPanel, JProgressBar, JTextArea, SwingConstants, SwingUtilities, WindowConstants}
 
 import scala.collection.mutable.ArrayBuffer
 
 class SwingFrontend extends UiCallbacks {
-  val jframe = new JFrame("PackUpdate - Updating Mods")
 
-  val size = new Dimension(310, 100)
-  jframe.setMinimumSize(size)
-  jframe.setMaximumSize(size)
-  jframe.setPreferredSize(size)
+  val panel = new JPanel //("PackUpdate - Updating Mods")
 
-  val layout = new GridLayout(0, 1)
-  jframe.setLayout(layout)
-  jframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
+  panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS))
+
+  //val layout = new GridLayout(0, 1)
+  //panel.setLayout(layout)
+  //jframe.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
 
   val status1 = new JLabel("Launching", SwingConstants.CENTER)
   val status2 = new JLabel("", SwingConstants.CENTER)
@@ -28,21 +26,41 @@ class SwingFrontend extends UiCallbacks {
   progress1.setVisible(false)
   progress2.setVisible(false)
 
-  private val content = jframe.getContentPane
+  panel.add("status1", status1)
+  panel.add("progress1", progress1)
+  panel.add("status2", status2)
+  panel.add("progress2", progress2)
 
-  content.add("status1", status1)
-  content.add("progress1", progress1)
-  content.add("status2", status2)
-  content.add("progress2", progress2)
+  val pane = new JOptionPane(
+    "",
+    JOptionPane.INFORMATION_MESSAGE,
+    JOptionPane.DEFAULT_OPTION,
+    SwingFrontend.EmptyIcon,
+    Array.empty,
+    null
+  )
 
-  jframe.pack()
-  jframe.setVisible(true)
+  private val dialog = pane.createDialog(new Frame,"PackUpdate - Updating Mods")
+
+  dialog.add(panel)
+
+  val size = new Dimension(310, 125)
+  dialog.setMinimumSize(size)
+  dialog.setMaximumSize(size)
+  dialog.setPreferredSize(size)
+
+  dialog.pack()
+  dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
 
   private var subStatusMessage: Option[String] = None
   private var subProgressUnit = ProgressUnit.Scalar
   private var subProgressValue = (0, 0)
 
   private val errorList = ArrayBuffer.empty[String]
+
+  def run(): Unit = {
+    dialog.setVisible(true)
+  }
 
   /**
     *
@@ -77,8 +95,10 @@ class SwingFrontend extends UiCallbacks {
     * @param numTotal     the amount of items to process in total
     */
   override def progressUpdate(numProcessed: Int, numTotal: Int): Unit = {
-    progress1.setValue(numProcessed)
-    progress1.setMaximum(numTotal)
+    Util.swingRun {
+      progress1.setValue(numProcessed)
+      progress1.setMaximum(numTotal)
+    }
   }
 
   /**
@@ -99,22 +119,28 @@ class SwingFrontend extends UiCallbacks {
     * Show a secondary progress indicator to the user
     */
   override def subProgressBar_=(value: Boolean): Unit = {
-    progress2.setVisible(value)
-    updateSubStatus()
+    Util.swingRun {
+      progress2.setVisible(value)
+      updateSubStatus()
+    }
   }
 
   override def subProgressUpdate(numProcessed: Int, numTotal: Int): Unit = {
-    progress2.setMaximum(numTotal)
-    progress2.setValue(numProcessed)
     subProgressValue = (numProcessed, numTotal)
-    updateSubStatus()
+    Util.swingRun {
+      progress2.setMaximum(numTotal)
+      progress2.setValue(numProcessed)
+      updateSubStatus()
+    }
   }
 
   override def subUnit: ProgressUnit = subProgressUnit
 
   override def subUnit_=(unit: ProgressUnit): Unit = {
     subProgressUnit = unit
-    updateSubStatus()
+    Util.swingRun {
+      updateSubStatus()
+    }
   }
 
   /**
@@ -124,7 +150,9 @@ class SwingFrontend extends UiCallbacks {
     */
   override def subStatusUpdate(status: Option[String]): Unit = {
     subStatusMessage = status
-    updateSubStatus()
+    Util.swingRun {
+      updateSubStatus()
+    }
   }
 
   /**
@@ -176,7 +204,17 @@ class SwingFrontend extends UiCallbacks {
       errorBox.setEditable(false)
       panel.add(errorBox)
 
-      JOptionPane.showMessageDialog(jframe, panel, "PackUpdate encountered errors during operation", JOptionPane.PLAIN_MESSAGE)
+      JOptionPane.showMessageDialog(panel, panel, "PackUpdate encountered errors during operation", JOptionPane.PLAIN_MESSAGE)
     }
+  }
+}
+
+object SwingFrontend {
+  object EmptyIcon extends Icon {
+    override def paintIcon(c: Component, g: Graphics, x: Int, y: Int): Unit = ()
+
+    override def getIconWidth: Int = 0
+
+    override def getIconHeight: Int = 0
   }
 }
