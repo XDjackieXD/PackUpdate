@@ -36,7 +36,7 @@ object FileManager {
         case Some(remote_version) => if (remote_version.version != component.version) {
           Some(Update.UpdatedComponent(component, remote_version))
         } else {
-          if (component.validateIntegrity(config, ui)) {
+          if (!config.debugFlags.contains(DebugFlag.ForceRefresh) && component.validateIntegrity(config, ui)) {
             None
           } else {
             Some(Update.InvalidComponent(component))

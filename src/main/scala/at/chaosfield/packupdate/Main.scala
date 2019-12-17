@@ -4,14 +4,16 @@ import java.io.File
 import java.net.URL
 import java.util.jar.Manifest
 
-import at.chaosfield.packupdate.common.{MainConfig, MainLogic, PackSide, Util}
+import at.chaosfield.packupdate.common.{DebugFlag, MainConfig, MainLogic, PackSide, Util}
 import at.chaosfield.packupdate.frontend.{CliCallbacks, SwingFrontend}
 import at.chaosfield.packupdate.generator.PackGenerator
+import javax.swing.SwingUtilities
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
 import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable.HashSet
 
 
 object Main {
@@ -137,7 +139,23 @@ object Main {
 
     val remoteUrl = options.getString("url")
 
-    MainConfig(mcDir, new URL(remoteUrl), side, options.get("accept-eula"))
+    val debugFlags =
+      System.getProperty("at.chaosfield.packupdate.debug", "") match {
+        case "" => HashSet.empty[DebugFlag]
+        case list => HashSet.apply(
+          list
+            .split(",")
+            .flatMap(flagName => DebugFlag.fromString(flagName) match {
+              case Some(entry) =>
+                Some(entry)
+              case None =>
+                println(s"Unknown flag $flagName")
+                None
+            }):_*
+        )
+      }
+
+    MainConfig(mcDir, new URL(remoteUrl), side, options.get("accept-eula"), debugFlags)
   }
 
   def runCli(config: MainConfig): Unit = {
@@ -147,7 +165,13 @@ object Main {
   }
 
   def runSwing(config: MainConfig): Unit = {
-    val logic = new MainLogic(new SwingFrontend)
+    val gui = Util.swingRun(new SwingFrontend)
+
+    Util.swingRunAsync {
+      gui.run()
+    }
+
+    val logic = new MainLogic(gui)
 
     logic.runUpdate(config)
     Util.exit(0) // TODO: Find a solution to this
