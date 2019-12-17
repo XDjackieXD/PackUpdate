@@ -170,7 +170,7 @@ class SwingFrontend extends UiCallbacks {
     */
   override def printTransactionSummary(summary: List[(String, List[Update])]): Unit = CliCallbacks.printTransactionSummary(summary)
 
-  override def log(logLevel: LogLevel, message: String): Unit = CliCallbacks.log(logLevel, message)
+  override def log(logLevel: LogLevel, message: String): Unit = println(format_log(logLevel, message))
 
   def updateSubStatus(): Unit = {
     val status = new StringBuilder
