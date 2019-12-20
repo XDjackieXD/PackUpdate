@@ -10,18 +10,7 @@ It was written to work directly as a pre-launch command for MultiMC and features
  * No need for a huge amount of webspace or traffic!
 
 ## How?
-You can find an example modpack in the folder "ExamplePack".
-Basically add the Updater.jar into the instance zip in the minecraft folder
-and add this line to the instance.cfg file
-`PreLaunchCommand=java -jar "$INST_MC_DIR/Updater.jar" "Link to modpack.cfg file"`
-The config file on your server is a csv with the following values:
-Name,Version,Download-URL,Type,checksum,flags
-Where Type is either "mod", "config" or "resources":
-"config" and "resources" are both zip files.
-and get extracted into the root folder of your Minecraft instance.
-Checksum is optional and if present a sha256 sum of the file.
-Flags is a semicolon(`;`) separated list of flags.
-Currently supported are `server_only`, `client_only` and `force_overwrite`
+For a detailed explanation on how to set up PackUpdate see the [Wiki](https://github.com/XDjackieXD/PackUpdate/wiki)
 
 ## How to build?
 Install [Scala](https://scala-lang.org/) and [SBT](https://www.scala-sbt.org/), then run `sbt assembly`. This will produce a standalone jar. 
