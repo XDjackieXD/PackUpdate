@@ -20,7 +20,7 @@ object Main {
 
   val ProjectName = "PackUpdate"
   val UpdaterUpdaterReleasesURL = new URL("https://api.github.com/repos/XDjackieXD/PackUpdateUpdater/releases")
-  val MultiMCMetadataLWJGL = new URL("https://v1.meta.multimc.org/org.lwjgl/")
+  val MultiMCMetadataLWJGL = new URL("https://meta.multimc.org/v1/org.lwjgl/")
   val PackUpdateReleaseUrl = new URL("https://api.github.com/repos/XDjackieXD/PackUpdate/releases")
 
   /// Hack to get this to run on JavaFx 7
