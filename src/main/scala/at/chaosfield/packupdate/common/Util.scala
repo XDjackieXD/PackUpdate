@@ -6,6 +6,7 @@ import java.nio.file.Files
 
 import at.chaosfield.packupdate.common.error.ChecksumException
 import at.chaosfield.packupdate.json.GithubRelease
+import javax.swing.SwingUtilities
 import org.json4s._
 import org.json4s.jackson.JsonMethods
 
@@ -13,7 +14,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
 
 object Util {
-
   /**
     * Get the file where a [[Component]] should be put. This is only valid for single-file components
     *
@@ -208,5 +208,21 @@ object Util {
     */
   def absoluteToRelativePath(path: File, to: File): String = {
     to.toURI.relativize(path.toURI).getPath
+  }
+
+  /**
+    * A wrapper around [[SwingUtilities.invokeAndWait]], that fits better into the scala type system
+    * @param cb
+    * @tparam T
+    * @return
+    */
+  def swingRun[T >: Null](cb: => T): T = {
+    var foo: T = null
+    SwingUtilities.invokeAndWait(() => foo = cb)
+    foo
+  }
+
+  def swingRunAsync(cb: => Unit): Unit = {
+    SwingUtilities.invokeLater(() => cb)
   }
 }
