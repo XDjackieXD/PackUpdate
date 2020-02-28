@@ -1,9 +1,5 @@
 package at.chaosfield.packupdate
 
-import java.io.File
-import java.net.URL
-
-import at.chaosfield.packupdate.common.{FileManager, StdoutLog, Util}
 import javax.swing.JOptionPane
 
 /**
@@ -11,18 +7,22 @@ import javax.swing.JOptionPane
   * the legacy updater. It then instructs the user to update the packupdate
   */
 object PackUpdate {
-  /*
   def main(args: Array[String]): Unit = {
     System.err.println("Your UpdaterUpdater is not compatible with this version of PackUpdate")
     System.err.println("More information on upgrading UpdaterUpdater: https://github.com/XDjackieXD/PackUpdate/wiki/Migrating-from-2.x-to-3.0")
     JOptionPane.showMessageDialog(
       null,
-      "Oh dear, it seems like this version of PackUpdate is no longer compatible with your version of the UpdaterUpdater. " +
-      "Please check the instance log for more information on how to upgrade.")
+      "Sorry to interrupt, it seems like this version of PackUpdate is no longer compatible with your version of the UpdaterUpdater. \n" +
+      "Please check the instance log for more information on how to upgrade.\n" +
+      "Due to technical limitations on part of MultiMC we could not migrate you automatically. \n\n" +
+
+      "If you are playing on a server you might want to contact your server owner for an updated pack zip file"
+    )
 
     System.exit(1)
   }
-  */
+
+  /*
   def main(args: Array[String]): Unit = {
     try {
       run(args)
@@ -92,4 +92,5 @@ object PackUpdate {
         throw new IllegalStateException("Could not identify the correct method to convert the old to the new command line")
     }
   }
+ */
 }
