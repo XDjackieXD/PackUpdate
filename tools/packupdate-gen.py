@@ -38,7 +38,7 @@ def generate_mod(mod_file, url_base, flags, writer):
             data = json.load(f)
             if 'modListVersion' in data and data['modListVersion'] == 2:
                 data = data['modList']
-            name = data[0]['name']
+            name = data[0]['modid']
             if 'version' in data[0]:
                 version = data[0]['version']
             else:
