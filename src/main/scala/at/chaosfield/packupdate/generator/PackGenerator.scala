@@ -6,8 +6,8 @@ import java.util.Properties
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import at.chaosfield.packupdate.Main
-import at.chaosfield.packupdate.common.{ComponentType, FileManager, Log, UiCallbacks, Util}
-import at.chaosfield.packupdate.json.{GithubRelease, MultiMCComponent, MultiMCMetadata, MultiMCPack, serializer}
+import at.chaosfield.packupdate.common._
+import at.chaosfield.packupdate.json._
 import org.json4s.jackson.{JsonMethods, Serialization}
 
 import scala.io.Source
@@ -41,24 +41,36 @@ object PackGenerator {
 
     val updaterFile = s"packupdate/UpdaterUpdater-$updaterVersion.jar"
 
-    val (stream, _) = FileManager.retrieveUrl(updaterDownload.toURL, ui)
+    val (stream, size) = FileManager.retrieveUrl(updaterDownload.toURL, ui)
 
     zipStream.putNextEntry(new ZipEntry(".minecraft/"))
     zipStream.putNextEntry(new ZipEntry(".minecraft/packupdate/"))
     zipStream.putNextEntry(new ZipEntry(".minecraft/" + updaterFile))
 
+    if (size.isDefined) {
+      ui.subProgressBar = true
+      ui.subUnit = ProgressUnit.Bytes
+    }
+
     val buffer = new Array[Byte](4096)
     var finished = false
+    var bytesWritten = 0
     while (!finished) {
       val count = stream.read(buffer)
       if (count > 0) {
-        // TODO: Progress Bar
+        bytesWritten += count
+        size match {
+          case Some(s) => ui.subProgressUpdate(bytesWritten, s)
+          case None =>
+        }
         zipStream.write(buffer, 0, count)
       } else {
         finished = true
       }
     }
     zipStream.closeEntry()
+
+    ui.subProgressBar = false
 
     zipStream.putNextEntry(new ZipEntry("instance.cfg"))
 

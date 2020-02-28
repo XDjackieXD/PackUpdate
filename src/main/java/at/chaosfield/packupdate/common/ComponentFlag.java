@@ -30,7 +30,6 @@ public enum ComponentFlag {
      * It is undefined behaviour to set both this option and no_integrity (current implementation will ignore this option
      * in that case)
      */
-    // TODO: Implement for extraction
     // TODO: handle properly when upgrading from legacy
     ForceOverwrite("force_overwrite"),
 

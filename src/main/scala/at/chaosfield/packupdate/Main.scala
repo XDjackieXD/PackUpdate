@@ -9,7 +9,7 @@ import at.chaosfield.packupdate.frontend.{CliCallbacks, SwingFrontend}
 import at.chaosfield.packupdate.generator.PackGenerator
 import net.sourceforge.argparse4j.ArgumentParsers
 import net.sourceforge.argparse4j.impl.Arguments
-import net.sourceforge.argparse4j.inf.{ArgumentAction, ArgumentParser, ArgumentParserException, Namespace, Subparser}
+import net.sourceforge.argparse4j.inf.{ArgumentParser, ArgumentParserException, Namespace, Subparser}
 
 import scala.collection.JavaConverters._
 
@@ -158,9 +158,9 @@ object Main {
       new URL(namespace.getString("url")),
       new File(namespace.getString("out")),
       CliCallbacks,
-      Option(namespace.getString("xms").toInt),
-      Option(namespace.getString("xmx").toInt),
-      namespace.getBoolean("beta"),
+      Option(namespace.getString("xms")).map(_.toInt),
+      Option(namespace.getString("xmx")).map(_.toInt),
+      Option(namespace.getBoolean("beta").asInstanceOf[Boolean]).getOrElse(false),
       new URL(Option(namespace.getString("update-url")).getOrElse(Main.PackUpdateReleaseUrl.toString)),
       Option(namespace.getString("icon-key"))
     )
