@@ -67,7 +67,7 @@ object Update {
           runDownload(component, file, ui)
           ui.subStatusUpdate(Some("Extracting..."))
           configDir.mkdirs()
-          val files = FileManager.extractZip(file, configDir, component.hasFlag(ComponentFlag.ForceOverwrite), ui)
+          val files = FileManager.extractZip(file, configDir, !component.hasFlag(ComponentFlag.InitOnly) && component.hasFlag(ComponentFlag.ForceOverwrite), ui)
           file.deleteOnExit()
           ui.subStatusUpdate(None)
           files.map(f => InstalledFile(Util.absoluteToRelativePath(f._1, config.minecraftDir), f._2)).toArray
@@ -255,7 +255,9 @@ object Update {
       } else {
         newComponent.flags.contains(ComponentFlag.Disabled)
       }
-      RemovedComponent(oldComponent).execute(config, ui)
+      if (!newComponent.flags.contains(ComponentFlag.InitOnly)) {
+        RemovedComponent(oldComponent).execute(config, ui)
+      }
       NewComponent(newComponent).executeInternal(config, disabled, ui)
     }
   }

@@ -29,8 +29,9 @@ public enum ComponentFlag {
      *
      * It is undefined behaviour to set both this option and no_integrity (current implementation will ignore this option
      * in that case)
+     *
+     * Will be ignored if init_only is set.
      */
-    // TODO: handle properly when upgrading from legacy
     ForceOverwrite("force_overwrite"),
 
     /**
@@ -56,7 +57,12 @@ public enum ComponentFlag {
      * It is undefined behaviour to set both this option and force_overwrite (current implementation will ignore this option
      * in that case)
      */
-    NoIntegrity("no_integrity")
+    NoIntegrity("no_integrity"),
+
+    /**
+     * Only initializes the files. It will neither overwrite any existing files nor delete any files after removing the component.
+     */
+    InitOnly("init_only")
 
     ;
 
