@@ -58,7 +58,7 @@ def generate_mod(mod_file, url_base, flags, writer):
     our_flags = flags[name] if name in flags else ''
     writer.write("{},{},{}/mods/{},mod,{},{}\n".format(name, version, url_base, urllib.parse.quote(path.basename(mod_file)), sha256(mod_file), our_flags))
 
-def make_configs(url_base, writer):
+def make_configs(url_base, writer, exclude):
     with zipfile.ZipFile('configs.zip', 'w') as zip:
         for (dirname, dirs, files) in os.walk("config"):
             for dir in dirs:
@@ -67,6 +67,8 @@ def make_configs(url_base, writer):
                 zip.write(filename, arcname)
             for file in files:
                 filename = path.join(dirname, file)
+                if filename in exclude:
+                    continue
                 arcname = filename[7:]
                 zip.write(filename, arcname)
     writer.write("Configs,{1},{0}/configs.zip,config,{1}\n".format(url_base, sha256('configs.zip')))
@@ -100,8 +102,14 @@ if len(sys.argv) != 3:
 base_url = sys.argv[1]
 out_file = sys.argv[2]
 
+exclude = []
+if path.isfile('exclude.packupdate'):
+    with open('exclude.packupdate') as file:
+        for line in file.realines():
+            exclude.append(line)
+
 with open(out_file, 'w') as out_file:
-    make_configs(base_url, out_file)
+    make_configs(base_url, out_file, exclude)
     if path.isfile('resources.packupdate'):
         with open('resources.packupdate') as file:
             make_resources(file.readlines(), base_url, out_file)
@@ -117,5 +125,7 @@ with open(out_file, 'w') as out_file:
     modpath = 'mods/'
     for f in os.listdir(modpath):
         mod_file = os.path.join(modpath, f)
+        if mod_file in exclude:
+            continue
         if os.path.isfile(mod_file):
             generate_mod(mod_file, base_url, flags, out_file)
