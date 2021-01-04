@@ -28,7 +28,16 @@ def guess_mod_name(file_name):
         parts.append(p)
     return "-".join(parts)
 
-def generate_mod(mod_file, url_base, flags, writer):
+def apply_mod_count(modcount, modid):
+    if modid in modcount:
+        count = modcount[modid]
+        modcount[modid] = count + 1
+        return "{}-{}".format(modid, count)
+    else:
+        modcount[modid] = 1
+        return modid
+
+def generate_mod(mod_file, url_base, flags, writer, modcount):
     zip = zipfile.ZipFile(mod_file)
     name = None
     version = None
@@ -55,6 +64,7 @@ def generate_mod(mod_file, url_base, flags, writer):
     if name == None:
         name = guess_mod_name(path.basename(mod_file))
         version = ''
+    name = apply_mod_count(modcount, name)
     our_flags = flags[name] if name in flags else ''
     writer.write("{},{},{}/mods/{},mod,{},{}\n".format(name, version, url_base, urllib.parse.quote(path.basename(mod_file)), sha256(mod_file), our_flags))
 
@@ -123,9 +133,10 @@ with open(out_file, 'w') as out_file:
                 key, val = line.split(',')
                 flags[key] = val.rstrip()
     modpath = 'mods/'
+    modcount = {}
     for f in os.listdir(modpath):
         mod_file = os.path.join(modpath, f)
         if mod_file in exclude:
             continue
         if os.path.isfile(mod_file):
-            generate_mod(mod_file, base_url, flags, out_file)
+            generate_mod(mod_file, base_url, flags, out_file, modcount)
