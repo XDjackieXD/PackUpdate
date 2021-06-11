@@ -3,13 +3,14 @@ package at.chaosfield.packupdate.common
 import java.io.File
 
 import at.chaosfield.packupdate.Main
-import at.chaosfield.packupdate.json.{InstalledComponent, InstalledFile, LocalDatabase, serializer}
+import at.chaosfield.packupdate.json.{Credentials, InstalledComponent, InstalledFile, LocalDatabase, serializer}
 import org.json4s._
 import org.json4s.jackson.{JsonMethods, Serialization}
 
 import scala.io.Source
 
-class MainLogic(ui: UiCallbacks) {
+class MainLogic(ui: UiCallbacks) extends AuthenticationCallback {
+  var localData: LocalDatabase = _
   def runUpdate(config: MainConfig): Unit = {
 
     ui.info(s"Packupdate Version: ${Main.Version}")
@@ -42,10 +43,10 @@ class MainLogic(ui: UiCallbacks) {
         FileManager.writeStringToFile(localFile, Serialization.write(localData)(serializer.formats))
       }
 
-      val localData = MainLogic.getLocalData(localFile)
+      localData = MainLogic.getLocalData(localFile)
       ui.statusUpdate("Updating Pack Metadata...")
       val remoteData = FileManager
-        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(config.remoteUrl, ui)._1))
+        .parsePackList(Source.fromInputStream(FileManager.retrieveUrl(config.remoteUrl, ui, Some(this))._1))
         .filter(c => c.neededOnSide(config.packSide))
 
       ui.statusUpdate("Calculating changes and checking integrity...")
@@ -77,7 +78,7 @@ class MainLogic(ui: UiCallbacks) {
         ui.statusUpdate(s"$verb ${update.name}")
         ui.progressUpdate(idx, updates.length)
         try {
-          val files = update.execute(config, ui)
+          val files = update.execute(config, ui, this)
           update.newVersion match {
             case Some(newComp) =>
               Some(InstalledComponent.fromRemote(newComp, files))
@@ -100,7 +101,7 @@ class MainLogic(ui: UiCallbacks) {
       val finalComponents = localData
           .installedComponents
           .filter(c => !updates.exists(u => u.newOrOld.name == c.name)) ++ components.flatten
-      val updatedLocalData = LocalDatabase(finalComponents)
+      val updatedLocalData = LocalDatabase(finalComponents, localData.storedCredentials)
 
       FileManager.writeStringToFile(localFile, Serialization.write(updatedLocalData)(serializer.formats))
 
@@ -111,6 +112,24 @@ class MainLogic(ui: UiCallbacks) {
         e.printStackTrace()
         ui.reportError("Internal Error while trying to perform Update", Some(e))
     }
+  }
+
+  override def authenticate(message: Option[String], defaultUsername: Option[String]): Option[(String, String)] = {
+    // TODO: Check if credentials are stored
+    localData.storedCredentials match {
+      case Some(creds) => Some((creds.username, creds.password))
+      case None =>
+        ui.askAuthentication(defaultUsername, message) match {
+          case Some(creds) =>
+            Some((creds.username, creds.password))
+          case None => None
+        }
+    }
+    // TODO: if not ask user for credentials
+  }
+
+  override def confirmCredentials(username: String, password: String): Unit = {
+    localData.storedCredentials = Some(Credentials(username, password))
   }
 }
 

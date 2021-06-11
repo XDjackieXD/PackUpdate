@@ -6,7 +6,8 @@ import java.net.URI
 import at.chaosfield.packupdate.common._
 
 case class LocalDatabase(
-                        installedComponents: Array[InstalledComponent]
+                        installedComponents: Array[InstalledComponent],
+                        var storedCredentials: Option[Credentials] = None
                         )
 
 case class InstalledComponent(
@@ -93,3 +94,5 @@ case class InstalledFile(
   }
 
 }
+
+case class Credentials(username: String, password: String)

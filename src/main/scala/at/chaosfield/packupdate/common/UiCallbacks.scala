@@ -72,6 +72,14 @@ trait UiCallbacks extends Log {
   def printTransactionSummary(summary: List[(String, List[Update])]): Unit
 
   /**
+    * Asks the user interactively provide user credentials
+    * @param prefillUsername if provided, the username is pre-filled with this value
+    * @param message if provided a message provided by the server on why the user should authenticate
+    * @return [[None]], if authentication was canceled, otherwise the entered credentials
+    */
+  def askAuthentication(prefillUsername: Option[String], message: Option[String]): Option[AuthResult]
+
+  /**
     * Called before program exits
     */
   def finish(): Unit

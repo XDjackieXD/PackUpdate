@@ -1,9 +1,9 @@
 package at.chaosfield.packupdate.common
 
-import java.io.{File, FileInputStream, FileNotFoundException, IOException}
+import java.io.{File, FileInputStream, FileNotFoundException}
 import java.net.{URI, URL}
 
-import at.chaosfield.packupdate.json.{ForgeInstallSpec, InstalledComponent, InstalledFile, LibraryInformation, VanillaVersionManifest, VanillaVersionSpec, serializer}
+import at.chaosfield.packupdate.json._
 import org.apache.commons.io.FileUtils
 import org.json4s.jackson.JsonMethods
 
@@ -15,7 +15,7 @@ sealed abstract class Update {
   def newVersion: Option[Component]
   def name = newOrOld.name
   def newOrOld: Component = newVersion.orElse(oldVersion.map(_.toComponent)).get
-  def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile]
+  def execute(config: MainConfig, ui: UiCallbacks, auth: AuthenticationCallback): Array[InstalledFile]
 }
 
 object Update {
@@ -24,12 +24,12 @@ object Update {
 
     override def newVersion: Option[Component] = Some(component)
 
-    override def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile] = {
+    override def execute(config: MainConfig, ui: UiCallbacks, auth: AuthenticationCallback): Array[InstalledFile] = {
       ui.debug(s"NewComponent(${component.display}).execute()")
-      executeInternal(config, component.flags.contains(ComponentFlag.Disabled), ui)
+      executeInternal(config, component.flags.contains(ComponentFlag.Disabled), ui, auth)
     }
 
-    def runDownload(component: Component, file: File, ui: UiCallbacks): Unit = {
+    def runDownload(component: Component, file: File, ui: UiCallbacks, auth: Option[AuthenticationCallback]): Unit = {
       ui.subStatusUpdate(Some("Downloading..."))
       ui.subUnit = ProgressUnit.Bytes
 
@@ -38,6 +38,7 @@ object Update {
         file,
         ui,
         component.hash,
+        auth,
         progressCallback = {
           case (num, Some(total)) =>
             if (!ui.subProgressBar) {
@@ -51,11 +52,11 @@ object Update {
       ui.subStatusUpdate(None)
     }
 
-    def executeInternal(config: MainConfig, disabled: Boolean, ui: UiCallbacks): Array[InstalledFile] = {
+    def executeInternal(config: MainConfig, disabled: Boolean, ui: UiCallbacks, auth: AuthenticationCallback): Array[InstalledFile] = {
       component.componentType match {
         case ComponentType.Mod =>
           val file = Util.fileForComponent(component, config.minecraftDir, disabled = disabled)
-          runDownload(component, file, ui)
+          runDownload(component, file, ui, Some(auth))
           Array(InstalledFile(
             Util.absoluteToRelativePath(file, config.minecraftDir),
             component.hash.getOrElse(FileHash.forFile(file))
@@ -64,7 +65,7 @@ object Update {
         case ComponentType.Config =>
           val file = File.createTempFile("packupdate", component.name + component.version)
           val configDir = new File(config.minecraftDir, "config")
-          runDownload(component, file, ui)
+          runDownload(component, file, ui, Some(auth))
           ui.subStatusUpdate(Some("Extracting..."))
           configDir.mkdirs()
           val files = FileManager.extractZip(file, configDir, !component.hasFlag(ComponentFlag.InitOnly) && component.hasFlag(ComponentFlag.ForceOverwrite), ui)
@@ -74,7 +75,7 @@ object Update {
 
         case ComponentType.Resource =>
           val file = File.createTempFile("packupdate", component.name + component.version)
-          runDownload(component, file, ui)
+          runDownload(component, file, ui, Some(auth))
           ui.subStatusUpdate(Some("Extracting..."))
           val files = FileManager.extractZip(file, config.minecraftDir, component.hasFlag(ComponentFlag.ForceOverwrite), ui)
           file.deleteOnExit()
@@ -86,7 +87,7 @@ object Update {
             case PackSide.Server =>
               val file = File.createTempFile("packupdate", component.name + component.version)
               val dir = Util.createTempDir()
-              runDownload(component, file, ui)
+              runDownload(component, file, ui, None)
               ui.subStatusUpdate(Some("Extracting..."))
               val files = FileManager.extractZip(file, dir, component.hasFlag(ComponentFlag.ForceOverwrite), ui)
               file.deleteOnExit()
@@ -210,6 +211,7 @@ object Update {
                 mcServerFile,
                 ui,
                 None, // TODO: let FileHash support sha1
+                None,
                 progressCallback = {
                   case (num, Some(max)) =>
                     ui.subProgressUpdate(num, max)
@@ -237,10 +239,10 @@ object Update {
 
     override def newVersion: Option[Component] = Some(component.toComponent)
 
-    override def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile] = {
+    override def execute(config: MainConfig, ui: UiCallbacks, auth: AuthenticationCallback): Array[InstalledFile] = {
       ui.debug(s"InvalidComponent(${component.display}).execute()")
-      RemovedComponent(component).execute(config, ui)
-      NewComponent(component.toComponent).executeInternal(config, component.flags.contains(ComponentFlag.Disabled), ui)
+      RemovedComponent(component).execute(config, ui, auth)
+      NewComponent(component.toComponent).executeInternal(config, component.flags.contains(ComponentFlag.Disabled), ui, auth)
     }
   }
   case class UpdatedComponent(oldComponent: InstalledComponent, newComponent: Component) extends Update {
@@ -248,7 +250,7 @@ object Update {
 
     override def newVersion: Option[Component] = Some(newComponent)
 
-    override def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile] = {
+    override def execute(config: MainConfig, ui: UiCallbacks, auth: AuthenticationCallback): Array[InstalledFile] = {
       ui.debug(s"NewComponent(${oldComponent.display}, ${newComponent.display}).execute()")
       val disabled = if (newComponent.flags.contains(ComponentFlag.Optional)) {
         oldComponent.componentType == ComponentType.Mod && oldComponent.files.head.fileName != oldComponent.files.head.enabledFile()
@@ -256,9 +258,9 @@ object Update {
         newComponent.flags.contains(ComponentFlag.Disabled)
       }
       if (!newComponent.flags.contains(ComponentFlag.InitOnly)) {
-        RemovedComponent(oldComponent).execute(config, ui)
+        RemovedComponent(oldComponent).execute(config, ui, auth)
       }
-      NewComponent(newComponent).executeInternal(config, disabled, ui)
+      NewComponent(newComponent).executeInternal(config, disabled, ui, auth)
     }
   }
   case class RemovedComponent(component: InstalledComponent) extends Update {
@@ -266,7 +268,7 @@ object Update {
 
     override def newVersion: Option[Component] = None
 
-    override def execute(config: MainConfig, ui: UiCallbacks): Array[InstalledFile] = {
+    override def execute(config: MainConfig, ui: UiCallbacks, auth: AuthenticationCallback): Array[InstalledFile] = {
       ui.debug(s"RemovedComponent(${component.display}).execute()")
       component.files.foreach(file => {
         ui.trace(s"Deleting file ${file.fileName}")

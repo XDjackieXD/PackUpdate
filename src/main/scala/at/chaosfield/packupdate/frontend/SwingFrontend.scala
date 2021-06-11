@@ -1,10 +1,9 @@
 package at.chaosfield.packupdate.frontend
 
-import java.awt.event.{WindowEvent, WindowListener}
-import java.awt.{Component, Dimension, Frame, Graphics, GridLayout, Window}
+import java.awt.{Component, Dimension, Frame, Graphics, GridLayout}
 
-import at.chaosfield.packupdate.common.{ConflictResolution, LogLevel, ProgressUnit, UiCallbacks, Update, Util}
-import javax.swing.{BoxLayout, Icon, JDialog, JFrame, JLabel, JOptionPane, JPanel, JProgressBar, JTextArea, SwingConstants, SwingUtilities, WindowConstants}
+import at.chaosfield.packupdate.common._
+import javax.swing._
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -207,6 +206,15 @@ class SwingFrontend extends UiCallbacks {
       JOptionPane.showMessageDialog(panel, panel, "PackUpdate encountered errors during operation", JOptionPane.PLAIN_MESSAGE)
     }
   }
+
+  /**
+    * Asks the user interactively provide user credentials
+    *
+    * @param prefillUsername if provided, the username is pre-filled with this value
+    * @param message         if provided a message provided by the server on why the user should authenticate
+    * @return [[None]], if authentication was canceled, otherwise the entered credentials
+    */
+  override def askAuthentication(prefillUsername: Option[String], message: Option[String]): Option[AuthResult] = ???
 }
 
 object SwingFrontend {

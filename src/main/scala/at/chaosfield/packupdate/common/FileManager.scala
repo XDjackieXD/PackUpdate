@@ -2,10 +2,12 @@ package at.chaosfield.packupdate.common
 
 import java.io._
 import java.net.{HttpURLConnection, URL, URLConnection}
+import java.nio.charset.StandardCharsets
 import java.security.{DigestInputStream, MessageDigest}
+import java.util.Base64
 import java.util.zip.ZipInputStream
 
-import at.chaosfield.packupdate.common.error.{ChecksumException, InfiniteRedirectException}
+import at.chaosfield.packupdate.common.error.{AuthenticationFailure, ChecksumException, InfiniteRedirectException}
 import at.chaosfield.packupdate.json.InstalledComponent
 
 import scala.annotation.tailrec
@@ -73,36 +75,67 @@ object FileManager {
     * @return an [[InputStream]] which contains the actual data as well as the total size
     */
   @throws[InfiniteRedirectException]
-  def retrieveUrl(url: URL, log: Log, maxRecursion: Int = 10): (InputStream, Option[Int]) = {
+  def retrieveUrl(url: URL, log: Log, authCallback: Option[AuthenticationCallback] = None, maxRecursion: Int = 10): (InputStream, Option[Int]) = {
     log.info(s"Downloading $url...")
     @tailrec
-    def request(url: URL, recursionLevel: Int): (URLConnection, Option[Int]) = {
+    def request(url: URL, recursionLevel: Int, auth: Option[(String, String)]): (URLConnection, Option[Int]) = {
       if (recursionLevel > maxRecursion) {
         log.warning(s"  => Too many redirects (stopped after $recursionLevel)")
         throw new InfiniteRedirectException(recursionLevel)
       }
       log.debug(s" -> Trying $url")
       val con = url.openConnection
-      con.setRequestProperty("user-Agent", UserAgent)
+      con.setRequestProperty("User-Agent", UserAgent)
       con.setConnectTimeout(5000)
       con.setReadTimeout(5000)
       con match {
         case http: HttpURLConnection => {
           http.setInstanceFollowRedirects(false)
+          auth match {
+            case Some((user, password)) =>
+              val authData = (user + ":" + password).getBytes(StandardCharsets.UTF_8)
+              http.setRequestProperty("Authorization", Base64.getEncoder.encodeToString(authData))
+            case None =>
+          }
           http.getResponseCode match {
             case HttpURLConnection.HTTP_MOVED_PERM | HttpURLConnection.HTTP_MOVED_TEMP | 307 =>
-              request(new URL(http.getHeaderField("Location")), recursionLevel + 1)
+              request(new URL(http.getHeaderField("Location")), recursionLevel + 1, None)
+            case HttpURLConnection.HTTP_UNAUTHORIZED =>
+              if (auth.isDefined) {
+                throw new AuthenticationFailure("Invalid credentials")
+              } else {
+                authCallback match {
+                  case Some(callback) =>
+                    val auth = http.getHeaderField("WWW-Authenticate")
+                    val realm = BasicAuthParser.parseChallenges(auth).find(c => c._1.equalsIgnoreCase("basic")) match {
+                      case Some((_, params)) => params("realm")
+                      case None => throw new AuthenticationFailure("This software only supports HTTP Basic Authentication")
+                    }
+                    val defaultUser = Option(http.getHeaderField("X-Default-Username"))
+                    val credentials = callback.authenticate(Some(realm), defaultUser)
+                    credentials match {
+                      case Some(creds) =>
+                        request(url, recursionLevel, Some(creds))
+                      case None => throw new RuntimeException("Authentication Aborted")
+                    }
+                  case None =>
+                    throw new AuthenticationFailure("Authentication not possible in this context")
+                }
+              }
             case _ =>
+              auth match {
+                case Some(auth) => authCallback.get.confirmCredentials(auth._1, auth._2)
+                case None =>
+              }
               (http, Option(http.getHeaderField("Content-Length")).map(_.toInt))
           }
         }
         case _ => (con, None)
       }
     }
-    val (con, len) = request(url, 0)
+    val (con, len) = request(url, 0, None)
     (con.getInputStream, len)
   }
-
 
   /**
     * Writes a given [[InputStream]] to a specified file, overwriting the existing contents
@@ -204,8 +237,8 @@ object FileManager {
     */
   @throws[InfiniteRedirectException]
   @throws[ChecksumException]
-  def downloadWithHash(url: URL, file: File, log: Log, hash: Option[FileHash], maxRedirects: Int = 10, progressCallback: (Int, Option[Int]) => Unit = (_, _) => () ): Unit = {
-    val (connection, fileSize) = FileManager.retrieveUrl(url, log, maxRedirects)
+  def downloadWithHash(url: URL, file: File, log: Log, hash: Option[FileHash], authenticationCallback: Option[AuthenticationCallback], maxRedirects: Int = 10, progressCallback: (Int, Option[Int]) => Unit = (_, _) => () ): Unit = {
+    val (connection, fileSize) = FileManager.retrieveUrl(url, log, authenticationCallback, maxRedirects)
     val stream = new DigestInputStream(connection, MessageDigest.getInstance("SHA-256"))
     FileManager.writeStreamToFile(stream, file, progress => progressCallback(progress, fileSize))
     hash match {

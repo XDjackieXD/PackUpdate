@@ -1,9 +1,7 @@
 package at.chaosfield.packupdate.common
 
 import java.io.{File, FileNotFoundException}
-import java.net.{URI, URL}
-
-import at.chaosfield.packupdate.json.LibraryInformation
+import java.net.URI
 
 class MavenPath(val domain: String, val name: String, val version: String, val classifier: Option[String], val extension: String = "jar") {
 
@@ -80,6 +78,7 @@ class MavenPath(val domain: String, val name: String, val version: String, val c
             .toURL,
           dest,
           log,
+          None,
           None, // TODO: Handle checksum
           progressCallback = progressCallback
         )
