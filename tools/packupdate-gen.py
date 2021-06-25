@@ -69,18 +69,31 @@ def generate_mod(mod_file, url_base, flags, writer, modcount):
     writer.write("{},{},{}/mods/{},mod,{},{}\n".format(name, version, url_base, urllib.parse.quote(path.basename(mod_file)), sha256(mod_file), our_flags))
 
 def make_configs(url_base, writer, exclude):
+    """
+    Creates a configs.zip from the config/ directory.
+
+    Can be given a list of filenames to exclude
+    """
     with zipfile.ZipFile('configs.zip', 'w') as zip:
         for (dirname, dirs, files) in os.walk("config"):
+            if dirname in exclude:
+                print("Skipping " + dirname + " and all files in it")
+                continue
+
             for dir in dirs:
                 filename = path.join(dirname, dir)
                 arcname = filename[7:]
-                zip.write(filename, arcname)
+                if filename not in exclude:
+                    zip.write(filename, arcname)
+
             for file in files:
                 filename = path.join(dirname, file)
                 if filename in exclude:
+                    print("Skipping " + filename)
                     continue
                 arcname = filename[7:]
                 zip.write(filename, arcname)
+
     writer.write("Configs,{1},{0}/configs.zip,config,{1}\n".format(url_base, sha256('configs.zip')))
 
 def path_to_tree(path):
@@ -115,8 +128,8 @@ out_file = sys.argv[2]
 exclude = []
 if path.isfile('exclude.packupdate'):
     with open('exclude.packupdate') as file:
-        for line in file.realines():
-            exclude.append(line)
+        for line in file.readlines():
+            exclude.append(line.strip())
 
 with open(out_file, 'w') as out_file:
     make_configs(base_url, out_file, exclude)
