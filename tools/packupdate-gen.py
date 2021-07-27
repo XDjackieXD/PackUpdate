@@ -65,7 +65,7 @@ def generate_mod(mod_file, url_base, flags, writer, modcount):
     if name == None:
         name = guess_mod_name(path.basename(mod_file))
     
-    if version == None or not version[0].is_digit():
+    if version == None or not version[0].isdigit():
         # Default the version to the first 8 bytes of the sha of it's unknown, or doesn't look version-like (digits)
         # This makes it so that the update logic isn't getting stuck on mod updates where the version hasn't changed.
         version = mod_sha[0:8]
