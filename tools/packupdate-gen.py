@@ -38,7 +38,11 @@ def apply_mod_count(modcount, modid):
         return modid
 
 def generate_mod(mod_file, url_base, flags, writer, modcount):
-    zip = zipfile.ZipFile(mod_file)
+    try:
+        zip = zipfile.ZipFile(mod_file)
+    except Exception as e:
+        print(mod_file + " failed to read")
+        raise e
     name = None
     version = None
     if 'mcmod.info' in zip.namelist():
@@ -59,6 +63,24 @@ def generate_mod(mod_file, url_base, flags, writer, modcount):
             print("Warning: Author of mod {} is apparently incapable of writing correctly formatted json. Guessing information, this may have weird side effects ({})".format(mod_file, e))
         except Exception as e:
             print("Irgendwas kaputt: {}".format(e))
+    elif 'META-INF/mods.toml' in zip.namelist():
+        try:
+            # Only use tomli if we have to parse TOML
+            import tomli
+
+            with zip.open('META-INF/mods.toml', 'r') as f:
+                toml = f.read().decode('utf-8')
+                data = tomli.loads(toml)
+                mod = data['mods'][0]
+
+                name = mod['modId']
+                if 'version' in mod and mod['version'] != "${file.jarVersion}":
+                    version = mod['version']
+                else:
+                    print("{} failed to actually have gradle replace '${{file.jarVersion}}'. Good job.".format(mod_file))
+
+        except tomli.TOMLDecodeError as e:
+            print("{} does appear to be contain a mods.toml with invalid TOML. ({})".format(mod_file,e))
     else:
         print("Warning: Mod {} does not contain mcmod.info (or it does not follow correct format). Guessing information, this may have weird side effects".format(mod_file))
     if name == None:
